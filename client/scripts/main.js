@@ -7,29 +7,52 @@ const apiServer = "https://danhenrydev.com/api/jeopardy";
 // const apiServer = "https://danhenrydev.com/api/jeopardy";
 // Title Page
 let PREFIX = "http://127.0.0.1:"
+// let PREFIX = "localhost:"
 // PREFIX = apiServer;
-const PORT = 5501;
+const PORT = 8080;
+// const PORT = 5501;
 const EDITPATH = "/edit-content.html"
 const ROUND1PATH = "/round-1.html";
 
 // Socket.io API
-const SOCKETIOURL = "http://localhost:3500"
+const SOCKETIOURL = "http://localhost:3500";
 
-import { readFileSync } from "fs";
-import { io } from 'socket.io-client';
+// ----------------
+
+//# sourceMappingURL=socket.io.esm.min.js.map
+// ----------------
+
+import { io } from 'socket.io-client'
 // import { io } from "https://cdn.socket.io/4.7.4/socket.io.esm.min.js";
-
-const socket = io({
-      path: SOCKETIOURL
-})
+const socket = io('http://localhost:3500')
+// ,{
+//   path: SOCKETIOURL,
+//   // transports: ['websocket']
+// });
 
 socket.on("connect", () => {
-    console.log("connected")
-    alert("connected")
-  })
-
- socket.on("connect_error", (err) => {console.log(`connect_error due to ${err.message}`);
+  console.log("connected");
+  alert("connected");
 });
+
+socket.on("connect_error", (err) => {
+  console.log(`connect_error due to ${err.message}`);
+});
+// import { readFileSync } from "fs";
+// import { io } from 'socket.io-client';
+// import { io } from "https://cdn.socket.io/4.7.4/socket.io.esm.min.js";
+// const 
+// const socket = io({
+//       path: SOCKETIOURL
+// })
+
+// socket.on("connect", () => {
+//     console.log("connected")
+//     alert("connected")
+//   })
+
+//  socket.on("connect_error", (err) => {console.log(`connect_error due to ${err.message}`);
+// });
 
 
 let inputFieldForP1Name = document.getElementById("inputFieldForP1Name");
