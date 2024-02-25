@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Round-1</title>
+    <link rel="stylesheet" href="./styles/style.css" />
+  </head>
+  <body class="r1 centered">
+    <div class="round-name">Round One</div>
+    <div id="class-and-game">
+      <div class="spacer"></div>
+      <div id="class-name"></div>
+      <div id="game-name"></div>
+      <div class="spacer"></div>
+    </div>
+    <!-- Game Scores and Play Grid -->
+    <div id="gameGrid">
+      <aside>
+        <div id="p1Name">Player 1 Score</div>
+        <div id="p1Score"></div>
+        <hr />
+        <div id="p2Name">Player 2 Score</div>
+        <div id="p2Score"></div>
+      </aside>
+      <div>
+        <div id="answerBoard" class="answerBoard">
+          <div class="category" id="catr1-1"></div>
+          <div class="category" id="catr1-2"></div>
+          <div class="category" id="catr1-3"></div>
+          <div class="category" id="catr1-4"></div>
+          <div class="category" id="catr1-5"></div>
+          <div class="category" id="catr1-6"></div>
+        </div>
+      </div>
+    </div>
+    <div id="textDisplay">
+      <div id="textDispCont"></div>
+      <button id="textDisplayBtn">Close</button>
+    </div>
+    <!-- Player Number -->
+    <div id="playerTurn" class="playerTurn">Player #:</div>
+
+    <!-- Pass, Enter Question, Guess -->
+    <button id="passBtn">Pass</button>
+    <button id="placeholderPassBtn">Pass</button>
+    <input
+      class="centered"
+      type="text"
+      autocomplete="off"
+      id="inputFieldForAnswer"
+      placeholder="Enter Your Question"
+    />
+    <button id="guessBtn">Guess</button>
+    <button id="placeholderGuessBtn">Guess</button>
+
+    <!-- Exit Btn, Footer Text, Next Round -->
+    <div class="footer">
+      <a class="previousRound" href="./index.html"><button>Exit</button></a>
+      <!-- <a class="testFetchButon" id="testFetchButton"><button>Fetch</button></a> -->
+      <footer>&copy Dan Henry 2023</footer>
+      <a class="nextRound" href="./round-2.html"><button>Round 2</button></a>
+      <a class="placeholderNextRound"><button>Round 2</button></a>
+    </div>
+    <!-- <script src="https://cdn.socket.io/4.7.4/socket.io.min.js" integrity="sha384-Gr6Lu2Ajx28mzwyVR8CFkULdCU7kMlZ9UthllibdOSo6qAiN+yXNHqtgdTvFXMT4" crossorigin="anonymous"></script> -->
+    <!-- <script type="module">
+      import { io } from "https://cdn.socket.io/4.7.4/socket.io.esm.min.js";
+    </script> -->
+    <script src="./scripts/main.js" type="module"></script>
+  </body>
+</html>

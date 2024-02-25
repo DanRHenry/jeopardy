@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Final Jeopardy</title>
+    <link rel="stylesheet" href="./styles/style.css">
+    <!-- <link media="screen and (max-width: 991px)" rel="stylesheet" href="./styles/landscapeMobileStyle.css"> -->
+  </head>
+  <body class="f centered">
+    <h1 id="class-name"></h1>
+    <h2 id="game-name"></h2>
+    <h2 class="round-name">Final Jeopardy</h2>
+    <!-- Game Scores and Play Grid -->
+    <div id="gameGrid" class="finalGrid">
+      <aside>
+        <div id="p1Name">Player 1 Score</div>
+        <div>$00,000</div>
+        <hr>
+        <div id="p2Name">Player 2 Score</div>
+        <div>$00,000</div>
+      </aside>
+      <div class="finalAnswerBoard">
+        <div id="finalCategory">Final Category</div>
+      </div>
+    </div>
+  
+    <!-- Player Number -->
+        <div class="playerTurn">Player #: </div>
+        <input id="finalBet" class="centered" type="number" placeholder="Place Your Bet"></input>
+<br>
+  <!-- Enter Question, Guess -->
+    <input class="centered finalInput" type="text" autocomplete="off" placeholder="Enter Your Question">
+    <button id="finalBtn">Guess</button>
+<!-- <br> -->
+  <!-- Exit Btn, Footer Text -->
+  <div class="flexRow" id="finalFooter">
+    <a class="finalPreviousRound" href="./index.html"><button>Exit</button></a> 
+    <footer style="margin-top: 0;">&copy Dan Henry 2023</footer>
+  </div>
+  <!-- Do not change the script source. Allows import/export to work. -->
+  <!-- <audio id="sound1" src="./assets/Jeopardy-theme-song.mp3" autoplay="autoplay"></audio> -->
+  <!-- <script type="module">
+    import { io } from "https://cdn.socket.io/4.7.4/socket.io.esm.min.js";
+  </script> -->
+    <script src="./scripts/main.js" type="module"></script>
+</body>
+</html>

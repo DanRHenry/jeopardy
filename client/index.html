@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Jeopardy</title>
+    <link rel="stylesheet" href="./styles/style.css" />
+  </head>
+  <body class="centered">
+    <h1 id="title" style="font-size: 0">Jeopardy!</h1>
+    <img id="hero" src="./assets/jeopardy-logo.webp" alt="jeopardy_logo" />
+    <div class="bottom">
+      <input
+        class="nameInput centered"
+        type="text"
+        id="inputFieldForP1Name"
+        placeholder="Player Name"
+      />
+      <input
+        class="nameInput centered"
+        type="text"
+        id="inputFieldForP2Name"
+        placeholder="Host Name"
+      />
+      <br />
+      <!-- <a href="./signup.html"> -->
+        <button id="startGame"></button>
+      <!-- </a> -->
+    </div>
+    <footer>&copy Dan Henry 2023</footer>
+    <!-- Do not change the script source. Allows import/export to work. -->
+    <!-- <script src="./scripts/test.js"></script> -->
+    <!-- <script src="https://cdn.socket.io/4.7.4/socket.io.min.js" integrity="sha384-Gr6Lu2Ajx28mzwyVR8CFkULdCU7kMlZ9UthllibdOSo6qAiN+yXNHqtgdTvFXMT4" crossorigin="anonymous"></script> -->
+    <!-- <script type="module">
+      import { io } from "https://cdn.socket.io/4.7.4/socket.io.esm.min.js";
+    </script> -->
+    <script src="./scripts/main.js" type="module"></script>
+  </body>
+</html>

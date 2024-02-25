@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Double Jeopardy</title>
+    <link rel="stylesheet" href="./styles/style.css" />
+  </head>
+  <body class="r2 centered">
+    <h1 id="class-name"></h1>
+    <h2 id="game-name"></h2>
+    <h2 class="round-name">Double Jeopardy</h2>
+
+    <!-- Game Scores and Play Grid -->
+    <div id="gameGrid">
+      <aside>
+        <div id="p1Name"></div>
+        <div id="p1Score"></div>
+        <hr />
+        <div id="p2Name"></div>
+        <div id="p2Score"></div>
+      </aside>
+      <div>
+        <div id="answerBoard" class="answerBoard">
+          <div class="category" id="catr2-1"></div>
+          <div class="category" id="catr2-2"></div>
+          <div class="category" id="catr2-3"></div>
+          <div class="category" id="catr2-4"></div>
+          <div class="category" id="catr2-5"></div>
+          <div class="category" id="catr2-6"></div>
+        </div>
+      </div>
+    </div>
+    <div id="textDisplay">
+      <div id="textDispCont"></div>
+      <button id="textDisplayBtn">Close</button>
+    </div>
+    <!-- Player Number -->
+    <div id="playerTurn" class="playerTurn">Player #:</div>
+
+    <!-- Pass, Enter Question, Guess -->
+    <button id="passBtn">Pass</button>
+    <button id="placeholderPassBtn">Pass</button>
+    <input
+      class="centered"
+      type="text"
+      autocomplete="off"
+      id="inputFieldForAnswer"
+      placeholder="Enter Your Question"
+    />
+    <button id="guessBtn">Guess</button>
+    <button id="placeholderGuessBtn">Guess</button>
+
+    <!-- Exit Btn, Footer Text, Next Round -->
+    <div class="footer">
+      <a class="previousRound" href="./index.html"><button>Exit</button></a>
+      <footer>&copy Dan Henry 2023</footer>
+      <a class="nextRound" href="./final-jeopardy.html"
+        ><button>Final</button></a
+      >
+      <!-- Change this later to respond to a either timer or the answerboard running out -->
+    </div>
+
+    <script src="./scripts/main.js" type="module"></script>
+  </body>
+</html>
