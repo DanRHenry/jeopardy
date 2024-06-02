@@ -71,7 +71,6 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // ! https://community.render.com/t/no-access-control-allow-origin-header/12947
 
 
-/* Temporarily Disabled
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader(
@@ -105,7 +104,6 @@ app.options("*", (req, res) => {
   }
 });
 
- End Temporarily Disabled */
 
 app.use("/api/jeopardy/user", user);
 app.use("/api/jeopardy/questions", questions);

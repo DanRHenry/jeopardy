@@ -11,11 +11,12 @@ const serverError = (res, error) => {
   });
 };
 
+//! Had to switch from bcrypt to bcryptjs to work on linux
 /* 
-  Require in the bcrypt dependency by storing it in a variable.
-  Bcrypt will be included in our controller --> add bcrypt in any file where we want encryption to take place.
+  Require in the bcryptjs dependency by storing it in a variable.
+  Bcryptjs will be included in our controller --> add bcryptjs in any file where we want encryption to take place.
 */
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 // Require in the jsonwebtoken dependency
 const jwt = require("jsonwebtoken");
 // Create a variable to hold the secret from our .env for the token
