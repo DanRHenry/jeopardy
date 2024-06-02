@@ -3,66 +3,76 @@ import placeholderQuestions from "./placeholder-questions.js";
 // Global DOM Variables
 
 // Gameplay API
-const apiServer = "https://danhenrydev.com/api/jeopardy";
+const apiServer = "http://127.0.0.1:3000/api/jeopardy";
 // const apiServer = "https://danhenrydev.com/api/jeopardy";
+
 // Title Page
-let PREFIX = "http://127.0.0.1:"
-// let PREFIX = "localhost:"
+let PREFIX = "http://127.0.0.1:";
 // PREFIX = apiServer;
 const PORT = 8080;
-// const PORT = 5501;
-const EDITPATH = "/edit-content.html"
+// const PORT = 5500;
+const EDITPATH = "/edit-content.html";
 const ROUND1PATH = "/round-1.html";
+// const ROUND1PATH = "/client/round-1.html";
+
+
+// Create WebSocket connection:
+const socket = new WebSocket('ws://localhost:3000')
+// const socket = new WebSocket('ws://127.0.0.1:3000')
+
+// Connection Opened:
+socket.addEventListener("open", function (event) {
+  socket.send("Hello Server!")
+  // console.log("connection open")
+})
+
+// Listen for Messages:
+socket.addEventListener("message", function (event) {
+  // console.log("here")
+  console.log("message incoming:", event.data)
+})
 
 // Socket.io API
-const SOCKETIOURL = "http://localhost:3500";
+const SOCKETIOURL = "http://127.0.0.1:3000";
+// const SOCKETIOURL = "http://127.0.0.1:3500";
+// const SOCKETIOURL = "http://localhost:3500";
 
 // ----------------
 
 //# sourceMappingURL=socket.io.esm.min.js.map
 // ----------------
 
-import { io } from 'socket.io-client'
+
 // import { io } from "https://cdn.socket.io/4.7.4/socket.io.esm.min.js";
-const socket = io('http://localhost:3500')
+// const socket = io('http://localhost:3500')
+
 // ,{
 //   path: SOCKETIOURL,
 //   // transports: ['websocket']
 // });
 
-socket.on("connect", () => {
-  console.log("connected");
-  alert("connected");
-});
-
-socket.on("connect_error", (err) => {
-  console.log(`connect_error due to ${err.message}`);
-});
-// import { readFileSync } from "fs";
-// import { io } from 'socket.io-client';
-// import { io } from "https://cdn.socket.io/4.7.4/socket.io.esm.min.js";
-// const 
-// const socket = io({
-//       path: SOCKETIOURL
-// })
-
 // socket.on("connect", () => {
-//     console.log("connected")
-//     alert("connected")
-//   })
-
-//  socket.on("connect_error", (err) => {console.log(`connect_error due to ${err.message}`);
+//   console.log("connected");
+//   alert("connected");
 // });
 
+// socket.on("connect_error", (err) => {
+//   console.log(`connect_error due to ${err.message}`);
+// });
 
+// import { readFileSync } from "fs";
+
+
+//! Title Page
 let inputFieldForP1Name = document.getElementById("inputFieldForP1Name");
 let inputFieldForP2Name = document.getElementById("inputFieldForP2Name");
 let playBtn = document.getElementById("startGame");
 
-// Game Page
+//! Game Page
 let roundName = document.getElementsByClassName("round-name");
-const classNameText = document.getElementById("class-name")
-const gameNameText = document.getElementById("game-name")
+const classNameText = document.getElementById("class-name");
+const gameNameText = document.getElementById("game-name");
+
 // Scoreboard
 let playerTwoScoreName = document.getElementById("p2Name");
 let playerOneScoreName = document.getElementById("p1Name");
@@ -83,8 +93,6 @@ let inputFieldForAnswer = document.getElementById("inputFieldForAnswer");
 
 // Answer board
 let answerBoard = document.getElementById("answerBoard");
-// const categoryArray = [];
-// const questionArray = [];
 let textDisplay = document.getElementById("textDisplay");
 let textDispCont = document.getElementById("textDispCont");
 let textDisplayBtn = document.getElementById("textDisplayBtn");
@@ -161,7 +169,7 @@ if (document.getElementsByTagName("title")[0].innerText == "Jeopardy") {
   roundOne();
 } else if (roundName[0]?.innerText == "Final Jeopardy") {
   round = "final";
-} 
+}
 
 // ------------------------------------------- Admin Page Functionality ---------------------------------------------------------4
 
@@ -318,7 +326,7 @@ const postGameplayInformation = async () => {
   customGameInformation.className =
     document.getElementById("class-names").value;
 
-    // Todo: socket
+  // Todo: socket
   const url = `${apiServer}/gameplay/gameplayinformation/`;
 
   await fetch(url, {
@@ -371,7 +379,6 @@ const fetchGames = async () => {
   const url = `${apiServer}/gameplay/`;
   let result = await fetch(url);
   availableGames = await result.json();
-  // console.log("availableGames:", availableGames);
 };
 
 //Todo - delete gameNameInput when the number of checked boxes goes below 6
@@ -824,6 +831,8 @@ document
 async function fillAvailableGamesList() {
   const availableGamesList = document.getElementById("availableGamesList");
   if (availableGamesList) {
+    // console.log("here")
+
     // --------------------------- Clear out Games List -------------
     availableGamesList.innerHTML = "";
     await fetchGames();
@@ -1082,30 +1091,30 @@ function titleScreen() {
     playBtn.innerText = welcomeText;
   }
   function saveName() {
-    localStorage.clear()
+    localStorage.clear();
     let player1Name = inputFieldForP1Name.value;
     let player2Name = inputFieldForP2Name.value;
 
     if (player1Name === "" && player2Name !== "") {
-      console.log("player1Name: ",player1Name)
+      console.log("player1Name: ", player1Name);
       localStorage.setItem("playerTwoName", player2Name);
-      window.location.href = `${PREFIX}${PORT}${EDITPATH}`
+      window.location.href = `${PREFIX}${PORT}${EDITPATH}`;
     }
 
     if (player2Name === "" && player1Name !== "") {
-      console.log("player2Name: ",player2Name)
+      console.log("player2Name: ", player2Name);
       localStorage.setItem("playerOneName", player1Name);
-      window.location.href = `${PREFIX}${PORT}${ROUND1PATH}`
+      window.location.href = `${PREFIX}${PORT}${ROUND1PATH}`;
     }
     if (player1Name === "" && player2Name === "") {
-      playBtn.innerText = "Please Enter Your Name..."
+      playBtn.innerText = "Please Enter Your Name...";
       setTimeout(() => {
         playBtn.innerText = welcomeText;
       }, 2000);
-      playBtn.innerText
+      playBtn.innerText;
     }
     if (player1Name !== "" && player2Name !== "") {
-      playBtn.innerText = "Only Enter One Name"
+      playBtn.innerText = "Only Enter One Name";
       setTimeout(() => {
         playBtn.innerText = welcomeText;
       }, 2000);
@@ -1437,8 +1446,6 @@ async function roundOne() {
   displayPlayerTurnMessage();
 
   function pullGameInformationFromSessionStorage() {
-
-
     /* 
   Destructure game information from session storage
   Parse the objects to question, category, and answer
@@ -1461,19 +1468,19 @@ async function roundOne() {
     const gameplayCategories = [];
 
     for (let index = 0; index < 6; index += 6) {
-        let answerArray = Object.entries(answer);
-        let questionArray = Object.entries(question);
-        // console.log("question in sessionstorage:",question);
-        // console.log("questionArray created from storage:",questionArray)
-        for ( const item of answerArray) {
-          gameplayAnswers.push(item[1].split("\r\n"));
-        }
-        for (const item of questionArray) {
-          gameplayQuestions.push(item[1].split("\r\n"));
-        }
+      let answerArray = Object.entries(answer);
+      let questionArray = Object.entries(question);
+      // console.log("question in sessionstorage:",question);
+      // console.log("questionArray created from storage:",questionArray)
+      for (const item of answerArray) {
+        gameplayAnswers.push(item[1].split("\r\n"));
+      }
+      for (const item of questionArray) {
+        gameplayQuestions.push(item[1].split("\r\n"));
+      }
     }
     for (let index = 0; index < Object.values(category).length; index++) {
-      for (let i = 0; i < 6; i+=6) {
+      for (let i = 0; i < 6; i += 6) {
         gameplayCategories.push(category[`category_${index}`]);
       }
     }
@@ -1496,7 +1503,7 @@ async function roundOne() {
       // console.log(tempAnswersArray)
       for (let i = 0; i < 36; i++) {
         if (!roundOneArray[i]) {
-          roundOneArray.push([])
+          roundOneArray.push([]);
         }
         if (gameplayCategories[i]) {
           roundOneArray[i].category = gameplayCategories[i];
@@ -1526,22 +1533,20 @@ async function roundOne() {
   // console.log("roundOneArray:",roundOneArray)
   const tempRoundOneArray = [];
   for (let i = 0; i < 6; i++) {
-    for (let j = 0; j < roundOneArray.length; j+=6)
-  {
-      tempRoundOneArray.push(roundOneArray[i+j])
+    for (let j = 0; j < roundOneArray.length; j += 6) {
+      tempRoundOneArray.push(roundOneArray[i + j]);
     }
   }
-
 
   // Set the score values
   let j = 0;
   for (let i = 0; i < tempRoundOneArray.length; i++) {
     if (i % 6 === 0 && i != 0) {
-      j+=200
+      j += 200;
     }
     tempRoundOneArray[i].score = 200 + j;
-}
-  roundOneArray = tempRoundOneArray
+  }
+  roundOneArray = tempRoundOneArray;
 
   //! Reactivate this after looking into the loop
   // fetchRandomCategories();
