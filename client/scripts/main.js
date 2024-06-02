@@ -32,34 +32,6 @@ socket.addEventListener("message", function (event) {
   console.log("message incoming:", event.data)
 })
 
-// Socket.io API
-const SOCKETIOURL = "http://127.0.0.1:3000";
-// const SOCKETIOURL = "http://127.0.0.1:3500";
-// const SOCKETIOURL = "http://localhost:3500";
-
-// ----------------
-
-//# sourceMappingURL=socket.io.esm.min.js.map
-// ----------------
-
-
-// import { io } from "https://cdn.socket.io/4.7.4/socket.io.esm.min.js";
-// const socket = io('http://localhost:3500')
-
-// ,{
-//   path: SOCKETIOURL,
-//   // transports: ['websocket']
-// });
-
-// socket.on("connect", () => {
-//   console.log("connected");
-//   alert("connected");
-// });
-
-// socket.on("connect_error", (err) => {
-//   console.log(`connect_error due to ${err.message}`);
-// });
-
 // import { readFileSync } from "fs";
 
 
@@ -141,7 +113,7 @@ let currentGame = {};
 let customGameName = "";
 const addedCategoriesDefaultHTML = `\n <h1>Gameplay Categories:</h1><ol id="tempCategories"></ol>\n`;
 
-// -------------------------------------- Fill Round One, Two, and final Arrays --------------------------------------------------
+// ----------------------------------- Fill Round One, Two, and final Arrays ---------------------------------------------
 for (let m = 0; roundTwoArray.length < 36; m++) {
   for (let questionPosition = m; questionPosition < 60; questionPosition++) {
     for (let catIndex = 0; catIndex < 6; catIndex++) {
@@ -154,10 +126,9 @@ for (let m = 0; roundTwoArray.length < 36; m++) {
     }
   }
 }
-// console.log("roundOneArray", roundOneArray);
 finalJeopardyCategory.push(placeholderQuestions[60]);
-// console.log(roundOneArray)
-// ---------------------------------------------- Set the round value ----------------------------------------------------------
+
+// -------------------------------------------- Set the round value ------------------------------------------------------
 if (document.getElementsByTagName("title")[0].innerText == "Jeopardy") {
   round = "title";
   titleScreen();
@@ -171,7 +142,7 @@ if (document.getElementsByTagName("title")[0].innerText == "Jeopardy") {
   round = "final";
 }
 
-// ------------------------------------------- Admin Page Functionality ---------------------------------------------------------4
+// ------------------------------------------- Admin Page Functionality --------------------------------------------------
 
 function clearOptions() {
   const option = document.getElementsByTagName("option");
@@ -180,7 +151,7 @@ function clearOptions() {
   }
 }
 
-// ------------------------------------ Fill the class list in the admin page ---------------------------------------------------
+// ------------------------------------ Fill the class list in the admin page --------------------------------------------
 async function fillClassListDropdown() {
   // await fetchInformation();
   // await fillClassListArray();
@@ -213,20 +184,16 @@ async function fillClassListDropdown() {
         listing.value = classList[i].className;
         listing.innerText = classList[i].className;
         document.getElementById("class-names")?.append(listing);
-        // }
       }
-
-      // }
     } else {
       console.log("else");
     }
   }
-  // }
 }
 
-// --------------------------------------------------- API Calls ----------------------------------------------------------------
+// --------------------------------------------------- API Calls ----------------------------------------------------------
 
-// ----------------------------------------------------- POST -------------------------------------------------------------------
+// ----------------------------------------------------- POST -------------------------------------------------------------
 
 // --------------- Post a new Class Name and fetch the information again to populate the class List ------------------------------
 
@@ -272,7 +239,7 @@ const postNewClassName = async () => {
     return;
   }
 
-  // ----------------------------- Create a new Class object and send it to the server ------------------------------------------
+  // ----------------------------- Create a new Class object and send it to the server ------------------------------------
   let newClass = {};
   newClass.className = classNameInputField.value;
   newClass.question = questionInputField.value;
@@ -301,7 +268,7 @@ const postNewClassName = async () => {
   await fillClassListArray();
 };
 
-// ----------------------- Use customGameInformation to make API Call to post a New Game Setup --------------------------------
+// ----------------------- Use customGameInformation to make API Call to post a New Game Setup --------------------------
 /* 
 Check the new game name field to make sure one has been entered. 
 If all is well, this sends the customGameInformation global object to the API. 
@@ -310,18 +277,18 @@ Then, fillAvailableGamesList() is run.
 
 
 */
-// ------------------------------------- contains fillAvailableGamesList() ----------------------------------------------------
+// ------------------------------------- contains fillAvailableGamesList() ----------------------------------------------
 
 const postGameplayInformation = async () => {
   const gameNameInput = document.getElementById("gameNameField");
 
-  // -------------------------------- Check that a game name has been entered -------------------------------------------------
+  // -------------------------------- Check that a game name has been entered --------------------------------------------
   if (gameNameInput.value === "") {
     console.log("needs a value");
     return;
   }
 
-  // -------------- Add gameNameInput field value to the customGameInformation object to send ----------------------------------
+  // -------------- Add gameNameInput field value to the customGameInformation object to send -----------------------------
   customGameInformation.gameName = gameNameInput.value;
   customGameInformation.className =
     document.getElementById("class-names").value;
@@ -342,15 +309,15 @@ const postGameplayInformation = async () => {
   addedCategories.innerHTML = addedCategoriesDefaultHTML;
 };
 
-// ----------------------------- Submit New Class Event Listener -----------------------------------------------------------------
+// ----------------------------- Submit New Class Event Listener ----------------------------------------------------------
 if (document.getElementById("submitNewClassBtn")) {
   document
     .getElementById("submitNewClassBtn")
 
     .addEventListener("click", postNewClassName);
 }
-// ----------------------------------------------------- GET ------------------------------------------------------------------
-// ---------------------------------- Fetch Questions, Answers, Categories, and Class Names ------------------------------------
+// ----------------------------------------------------- GET -------------------------------------------------------------
+// ---------------------------------- Fetch Questions, Answers, Categories, and Class Names ------------------------------
 /* 
 
 This function creates the global categoriesObject, which is used to fill questions, answers, classes, and categories for the fillClasslistArray function
@@ -367,14 +334,14 @@ const fetchInformation = async () => {
   classList = categoriesObject.getAllQuestions;
 };
 
-// -------------------------------------------- Fetch Student List API Call ---------------------------------------------------
+// -------------------------------------------- Fetch Student List API Call ---------------------------------------------
 const fetchStudentList = async () => {
   const url = `${apiServer}/user/`;
   let result = await fetch(url);
   let data = await result.json();
 };
 
-// ---------------------------------- Fetch Games from API and set to availableGames object ------------------------------------
+// ---------------------------------- Fetch Games from API and set to availableGames object ------------------------------
 const fetchGames = async () => {
   const url = `${apiServer}/gameplay/`;
   let result = await fetch(url);
@@ -383,8 +350,8 @@ const fetchGames = async () => {
 
 //Todo - delete gameNameInput when the number of checked boxes goes below 6
 
-// ------------------------------------------------- Edit Page Sequence ---------------------------------------------------------
-// ---------------------------------------- Run the Functions in the Correct Order ----------------------------------------------
+// ------------------------------------------------- Edit Page Sequence ---------------------------------------------------
+// ---------------------------------------- Run the Functions in the Correct Order ----------------------------------------
 // First, get the information from the api
 await fetchInformation();
 
@@ -397,7 +364,7 @@ fillCategoryOptionsDropdown();
 
 fillAvailableGamesList();
 
-// -------------------------------------- Fill the customContent array --------------------------------------------------------
+// -------------------------------------- Fill the customContent array --------------------------------------------------
 
 function fillCustomContentArray(
   gameAnswers,
@@ -423,10 +390,10 @@ async function fillClassListArray() {
   await fetchInformation();
   await fillClassListDropdown();
 
-  // -------------------------------------- Clear the classList array ---------------------------------------------------------
+  // -------------------------------------- Clear the classList array ---------------------------------------------------
   classList = [];
 
-  // -------------------------------------- Clear the customContentArray --------------------------------------------------------
+  // -------------------------------------- Clear the customContentArray --------------------------------------------------
 
   // customContentArray = []; //! Maybe remove this. Did not check into whether this is necessary.
 
@@ -440,7 +407,7 @@ async function fillClassListArray() {
     const gameClassName =
       categoriesObject.getAllQuestions[i].className.split("\r\n");
 
-    // ------------------------------------- Push Class Names & IDs to the classList array ---------------------------------------
+    // ------------------------------------- Push Class Names & IDs to the classList array --------------------------------
     classList.push({
       className: categoriesObject.getAllQuestions[i].className,
       id: categoriesObject.getAllQuestions[i]._id,
@@ -456,13 +423,13 @@ async function fillClassListArray() {
 
 fillClassListArray();
 
-// ---------------------------------- Function to fill the Category Options List -----------------------------------------------
+// ---------------------------------- Function to fill the Category Options List ------------------------------------------
 function fillCategoryOptionsDropdown() {
-  // ----------------------------------------------------------- Clear checkboxes ----------------------------------------------
+  // ----------------------------------------------------------- Clear checkboxes ----------------------------------------
   if (document.getElementById(`checkBoxes`)) {
     document.getElementById(`checkBoxes`).innerHTML = "";
   }
-  // -------------------------------------------- clear the results array and the resultsHTML ----------------------------------
+  // -------------------------------------------- clear the results array and the resultsHTML ----------------------------
   results = [];
   resultsHTML = "";
   gameplayCategoryObject = {};
@@ -476,13 +443,13 @@ function fillCategoryOptionsDropdown() {
   if (addedCategories) {
     addedCategories.innerHTML = addedCategoriesDefaultHTML;
   }
-  // ------Check through the fetched category categoriesObject and Fill the results with categories of the same class name -----
+  // ---Check through the fetched category categoriesObject and Fill the results with categories of the same class name ---
   for (let i = 0; i < categoriesObject.getAllQuestions.length; i++) {
     if (
       categoriesObject.getAllQuestions[i].className ===
       document.getElementById("class-names")?.value
     ) {
-      // ------------- For each category that matches the selected class, push an object into results --------------------------
+      // ------------- For each category that matches the selected class, push an object into results ---------------------
       results.push({
         question: categoriesObject.getAllQuestions[i].question,
         answer: categoriesObject.getAllQuestions[i].answer,
@@ -623,9 +590,9 @@ function fillCategoryOptionsDropdown() {
 
 let catIndex = 0;
 
-// --------------------------------------- Check to see how many category boxes have been checked ----------------------------
+// --------------------------------------- Check to see how many category boxes have been checked -----------------------
 
-// ------------------------If 6 have been checked, make a submit button and name entry field (change this?) ------------------
+// ------------------------If 6 have been checked, make a submit button and name entry field (change this?) --------------
 function checkNumberOfCheckboxesTicked(i) {
   // If checked...
   if (document.getElementsByClassName("checkboxInput")[i].checked === true) {
@@ -809,7 +776,7 @@ function addCheckboxes() {
 }
 
 // fillCategoryOptionsDropdown();
-// ------------------------------------------------ Event Listener for the Questions List Button -----------------------------
+// --------------------------------------------- Event Listener for the Questions List Button ----------------------------
 
 document
   .getElementById("questionsListBtn")
@@ -826,7 +793,7 @@ document
 
 // await fetchInformation();
 
-//! --------------------------------------------------- Fill Available Games List ------------------------------------------------
+//! ----------------------------------------------- Fill Available Games List -------------------------------------------
 
 async function fillAvailableGamesList() {
   const availableGamesList = document.getElementById("availableGamesList");
@@ -894,7 +861,7 @@ async function fillAvailableGamesList() {
         availableGames.getAllGameplayInformation[i].gameName;
       accordionHeader.appendChild(gamesListAccordionButton);
 
-      // ------------------- On click, send the selected Game Information to the currentGame global object ------------------
+      // ---------------- On click, send the selected Game Information to the currentGame global object ------------------
       const gameSelector = document.createElement("a");
       gameSelector.href = `${PREFIX}${PORT}${ROUND1PATH}`;
       gameSelector.innerText = "Start Game";
@@ -1032,7 +999,7 @@ activeStudentsList?.addEventListener("click", fetchStudentList);
 // console.log("r:",r)
 // Fetch Questions and Answers from danhenrydev jeopardy api
 
-// ----------------------------------------------------------- Fetch on Click -----------------------------------------------------------
+// ------------------------------------------------------- Fetch on Click -------------------------------------------------
 
 // const url = `${apiServer}/questions`;
 // const fetchQuestions = async function () {
