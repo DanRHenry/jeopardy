@@ -73,18 +73,19 @@ let signInSignUpObject = JSON.stringify({
 
 
 //! Search for user/email
-const findName = async () => {
+const findEmail = async () => {
   //! Check for User
 let checkForUserObject = JSON.stringify({
-  email: emailInput.value,
+  // email: emailInput.value,
+  email: "bla@bla.com"
 });
 
 console.log("checkForUserObject",checkForUserObject)
-  let url = `${apiServer}/admin/find`;
+  let url = `${apiServer}/admin/findAdmin`;
 
   const reqOptions = {
-    method: "POST",
-    // method: "GET",
+    // method: "POST",
+    method: "GET",
     headers: new Headers({
       // Authorization: token,
     }),
@@ -113,7 +114,7 @@ console.log("checkForUserObject",checkForUserObject)
     .getElementById("submit")
     .addEventListener("click", async function submitAdmin(e) {
       e.preventDefault();
-      await findName()
+      await findEmail()
       // Search the database for the administrator name/email
       // let foundName = await fetch(`${apiServer}/find`);
       //

@@ -5,7 +5,7 @@ const express = require("express");
 const app = express();
 const server = require("http").createServer(app);
 const WebSocket = require("ws");
-const PORT = 3000;
+const PORT = 3300;
 // const PORT = process.env.PORT || 4900;
 
 const wss = new WebSocket.Server({ server: server });
@@ -103,7 +103,6 @@ app.options("*", (req, res) => {
     console.log("fail");
   }
 });
-
 
 app.use("/api/jeopardy/user", user);
 app.use("/api/jeopardy/questions", questions);

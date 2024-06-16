@@ -1,4 +1,4 @@
-// freecodecamp has this as /api/users.js
+// freecodecamp has this as /api/users.js1
 
 const router = require("express").Router();
 const User = require("../models/user.model");
@@ -111,6 +111,30 @@ router.get("/find", requireValidation, async (req, res) => {
         ? res.status(200).json({
             message: "Found!",
             findUser,
+          })
+        : res.status(404).json({
+            message: `No Users Found.`,
+          });
+    } catch (err) {
+      serverError(res, err);
+    }
+})
+
+router.get("/findAdmin", async (req, res) => {
+  // res.header("Access-Control-Allow-Origin", "*");
+  // res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  console.log("req:",req.body)
+      try {
+      // const id = req.user._id;
+      // const email = req.user.email;
+
+      // const findUser = await User.findOne({ _id: id });
+      const findEmail = await User.findOne({ email: email });
+
+      findEmail
+        ? res.status(200).json({
+            message: "Found!",
+            findEmail,
           })
         : res.status(404).json({
             message: `No Users Found.`,
