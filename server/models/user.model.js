@@ -1,11 +1,7 @@
 const mongoose = require("mongoose");
 
 const UserSchema = new mongoose.Schema({
-    firstName: {
-        type: String,
-        required: false
-    },
-    lastName: {
+    displayName: {
         type: String,
         required: false
     },
@@ -18,12 +14,12 @@ const UserSchema = new mongoose.Schema({
         required: false
     },
     role: {
-        type: Boolean,
+        type: String,
         required: true
     },
     course: {
         type: String,
-        required: true
+        required: false
     }
 })
 

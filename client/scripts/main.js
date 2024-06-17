@@ -1,9 +1,9 @@
 import placeholderQuestions from "./placeholder-questions.js";
-
 // Global DOM Variables
 
 // Gameplay API
-const apiServer = "http://127.0.0.1:3000/api/jeopardy";
+const serverPort = 3300;
+const apiServer = `http://127.0.0.1:${serverPort}/api/jeopardy`;
 // const apiServer = "https://danhenrydev.com/api/jeopardy";
 
 // Title Page
@@ -13,32 +13,171 @@ const PORT = 8080;
 // const PORT = 5500;
 const EDITPATH = "/edit-content.html";
 const ROUND1PATH = "/round-1.html";
+
 // const ROUND1PATH = "/client/round-1.html";
 
-
 // Create WebSocket connection:
-const socket = new WebSocket('ws://localhost:3000')
-// const socket = new WebSocket('ws://127.0.0.1:3000')
+// const socket = new WebSocket("ws://localhost:3000");
+const socket = new WebSocket(`ws://127.0.0.1:${serverPort}`);
 
 // Connection Opened:
 socket.addEventListener("open", function (event) {
-  socket.send("Hello Server!")
-  // console.log("connection open")
-})
+  socket.send("Hello Server!");
+});
 
+//TODO Fix looping
 // Listen for Messages:
-socket.addEventListener("message", function (event) {
-  // console.log("here")
-  console.log("message incoming:", event.data)
-})
+// socket.addEventListener("message", function (event) {
+//   console.log("message incoming:", event.data);
+//   socket.send("Hello???");
+// });
+
+const sendMesage = () => {
+  socket.send("Hello???");
+};
 
 // import { readFileSync } from "fs";
 
-
 //! Title Page
-let inputFieldForP1Name = document.getElementById("inputFieldForP1Name");
-let inputFieldForP2Name = document.getElementById("inputFieldForP2Name");
-let playBtn = document.getElementById("startGame");
+// let inputFieldForP1Name = document.getElementById("inputFieldForP1Name");
+// let inputFieldForP2Name = document.getElementById("inputFieldForP2Name");
+// let playBtn = document.getElementById("startGame");
+const teacherSignInBtn = document.getElementById("teacherSignIn");
+const studentRegistrationBtn = document.getElementById("studentRegistration");
+
+//! Return Home
+const returnHome = document.getElementById("returnHome");
+returnHome?.addEventListener("click", function returnHome() {
+  window.location.href = `${PREFIX}${PORT}/index.html`;
+});
+
+//! Update Token Function
+const updateToken = (newToken) => {
+  sessionStorage.setItem("token", newToken);
+  // ^ .setItem(key, value)
+  // setSessionToken(newToken);
+};
+
+//! Teacher Sign-in Page
+if (document.title === "Teacher Login") {
+  let userNameInput = document.getElementById("nameField");
+  let passwordInput = document.getElementById("passwordField");
+  let emailInput = document.getElementById("emailField");
+
+  //! Sign In / Sign Up
+
+  const signinOrCreateAccountBtn = document.getElementById(
+    "signin-or-createaccount-btn"
+  );
+
+  signinOrCreateAccountBtn.addEventListener("click", () => {
+    let adminLoginHeader = document.getElementById("adminLoginHeader")
+    if (adminLoginHeader.innerText == "Log In") {
+      adminLoginHeader.innerText = "Create New Account"
+      signinOrCreateAccountBtn.innerText = "Log In"
+    }
+    else if (adminLoginHeader.innerText == "Create New Account") {
+      adminLoginHeader.innerText = "Log In"
+      signinOrCreateAccountBtn.innerText = "Create New Account"
+    }
+  });
+
+  const handleSubmit = async () => {
+    if (document.getElementById("adminLoginHeader").textContent === "Log In") {
+    const url = `${apiServer}/user/findAdmin`;
+    let signInSignUpObject = JSON.stringify({
+      userName: userNameInput.value,
+      email: emailInput.value,
+      password: passwordInput.value,
+    });
+    // Try/catch = fetch w/request options within fetch
+    try {
+      // This is an alternative way of writing the fetch than we did before. It's more dense, but fewer lines.
+      const res = await fetch(url, {
+        method: "POST",
+        headers: new Headers({
+          "Content-Type": "application/json",
+        }),
+        body: signInSignUpObject, // The second body refers to the body object above.
+      });
+      const data = await res.json(); // The .json takes the promise and makes it usable
+
+      // Pass the data token value to my updateToken
+      // If the server send a success message we can update token and route to room, if not we will get an alert
+      if (data.message === "Login Successful") {
+        updateToken(data.token);
+        console.log("logged in!")
+        window.location.href = `${PREFIX}${PORT}/edit-content.html`;
+        // navigate("/dashboard");
+      } else {
+        console.log("not found");
+        alert(data.message);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
+  else if (document.getElementById("adminLoginHeader").textContent === "Create New Account") {
+    const url = `${apiServer}/user/signup`;
+    let signInSignUpObject = JSON.stringify({
+      userName: userNameInput.value,
+      email: emailInput.value,
+      password: passwordInput.value,
+      role: "teacher",
+      course: "",
+    });
+    // Try/catch = fetch w/request options within fetch
+    try {
+      // This is an alternative way of writing the fetch than we did before. It's more dense, but fewer lines.
+      const res = await fetch(url, {
+        method: "POST",
+        headers: new Headers({
+          "Content-Type": "application/json",
+        }),
+        body: signInSignUpObject, // The second body refers to the body object above.
+      });
+      const data = await res.json(); // The .json takes the promise and makes it usable
+
+      // Pass the data token value to my updateToken
+      // If the server send a success message we can update token and route to room, if not we will get an alert
+      if (data.message === "Success! User Created!") {
+        updateToken(data.token);
+        // navigate("/dashboard");
+        console.log("user created! Yay! Now move to the round one screen")
+      } else {
+        console.log("Oops, user not created...");
+        alert(data.message);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
+  };
+
+  //! Search for user/email
+
+  document
+    .getElementById("submit")
+    .addEventListener("click", async function submitAdmin(e) {
+      e.preventDefault();
+
+      await handleSubmit();
+      // Search the database for the administrator name/email
+      // let foundName = await fetch(`${apiServer}/find`);
+      //
+      userNameInput.value = "";
+      passwordInput.value = "";
+      emailInput.value = "";
+
+      // let result = await fetch(`${apiServer}/admin`);
+      // let data = result.json();
+      // console.log("data:", data);
+    });
+}
+
+//! Teacher Sign-up Page
+
+//! Student Registration Page
 
 //! Game Page
 let roundName = document.getElementsByClassName("round-name");
@@ -142,134 +281,135 @@ if (document.getElementsByTagName("title")[0].innerText == "Jeopardy") {
   round = "final";
 }
 
-// ------------------------------------------- Admin Page Functionality --------------------------------------------------
+//!------------------------------------------- Admin Page Functionality --------------------------------------------------
 
-function clearOptions() {
-  const option = document.getElementsByTagName("option");
-  for (let i = option.length; i > 0; i--) {
-    option[i - 1].parentElement.removeChild(option[i - 1]);
-  }
-}
-
-// ------------------------------------ Fill the class list in the admin page --------------------------------------------
-async function fillClassListDropdown() {
-  // await fetchInformation();
-  // await fillClassListArray();
-  clearOptions();
-
-  const options = document.getElementsByTagName("option");
-  // console.log("options:",options)
-  // if (options.length > 0) {
-
-  for (let i = 0; i < classList.length; i++) {
-    const listing = document.createElement("option");
-    // console.log("classList:",classList)
-
-    // listing.className = "class-list-item";
-    // console.log("class-list-item:",document.getElementsByClassName("class-list-item"))
-    // for (let l = document.getElementsByClassName("class-list-item").length; l > 0 ; i--) {
-    //   console.log('listing-l:',listing[l]);
-    //   listing[l].parentElement.removeChild(listing[l]);
-    // }
-
-    // Check for consecutive duplicate classes (//todo:  come up with a solution to deal with non-consecutive duplicates: either sort alphabetically and keep the same logic, or search through the array) Use Filter Array Prototype?
-    if (options.length < classList.length) {
-      if (classList[i - 1]?.className != classList[i].className) {
-        // if (classList.includes(classList[classList.length -1].className)) {
-        //   console.log("same")
-        // } else {console.log("different")}
-
-        // for (let i = classList.length; i > 0; i --) {
-        // if (classList[i]?.className === (classList[classList.length]?.className)) {
-        listing.value = classList[i].className;
-        listing.innerText = classList[i].className;
-        document.getElementById("class-names")?.append(listing);
-      }
-    } else {
-      console.log("else");
+if (document.title === "Editor") {
+  function clearOptions() {
+    const option = document.getElementsByTagName("option");
+    for (let i = option.length; i > 0; i--) {
+      option[i - 1].parentElement.removeChild(option[i - 1]);
     }
   }
-}
 
-// --------------------------------------------------- API Calls ----------------------------------------------------------
+  // ------------------------------------ Fill the class list in the admin page --------------------------------------------
+  async function fillClassListDropdown() {
+    // await fetchInformation();
+    // await fillClassListArray();
+    clearOptions();
 
-// ----------------------------------------------------- POST -------------------------------------------------------------
+    const options = document.getElementsByTagName("option");
+    // console.log("options:",options)
+    // if (options.length > 0) {
 
-// --------------- Post a new Class Name and fetch the information again to populate the class List ------------------------------
+    for (let i = 0; i < classList.length; i++) {
+      const listing = document.createElement("option");
+      // console.log("classList:",classList)
 
-const postNewClassName = async () => {
-  // const options = document.getElementsByTagName("option");
-  // console.log("options:", options);
+      // listing.className = "class-list-item";
+      // console.log("class-list-item:",document.getElementsByClassName("class-list-item"))
+      // for (let l = document.getElementsByClassName("class-list-item").length; l > 0 ; i--) {
+      //   console.log('listing-l:',listing[l]);
+      //   listing[l].parentElement.removeChild(listing[l]);
+      // }
 
-  // ----------- Class Name Input ----------
-  const classNameInputField = document.getElementById("classNameInputField");
-  if (classNameInputField.value === "") {
-    console.log("Enter a name");
-    return;
+      // Check for consecutive duplicate classes (//todo:  come up with a solution to deal with non-consecutive duplicates: either sort alphabetically and keep the same logic, or search through the array) Use Filter Array Prototype?
+      if (options.length < classList.length) {
+        if (classList[i - 1]?.className != classList[i].className) {
+          // if (classList.includes(classList[classList.length -1].className)) {
+          //   console.log("same")
+          // } else {console.log("different")}
+
+          // for (let i = classList.length; i > 0; i --) {
+          // if (classList[i]?.className === (classList[classList.length]?.className)) {
+          listing.value = classList[i].className;
+          listing.innerText = classList[i].className;
+          document.getElementById("class-names")?.append(listing);
+        }
+      } else {
+        console.log("else");
+      }
+    }
   }
 
-  // ----------- Question Input -------------
-  // todo: add logic to check the number of questions
-  const questionInputField = document.getElementById("questionInputField");
-  if (questionInputField.value === "") {
-    console.log("Enter questions");
-    return;
-  }
+  // --------------------------------------------------- API Calls ----------------------------------------------------------
 
-  // ------------Answer Input ----------------
-  // todo: add logic to check the number of answers
-  const answerInputField = document.getElementById("answerInputField");
-  if (answerInputField.value === "") {
-    console.log("Enter answers");
-    return;
-  }
+  // ----------------------------------------------------- POST -------------------------------------------------------------
 
-  // ----------- Unit Input -------------------
-  const unitNameInputField = document.getElementById("unitNameInputField");
-  if (unitNameInputField.value === "") {
-    console.log("Enter a Unit Name");
-    return;
-  }
+  // --------------- Post a new Class Name and fetch the information again to populate the class List ------------------------------
 
-  // ----------- Category Input ---------------
+  const postNewClassName = async () => {
+    // const options = document.getElementsByTagName("option");
+    // console.log("options:", options);
 
-  const categoryInputField = document.getElementById("categoryInputField");
-  if (categoryInputField.value === "") {
-    console.log("Enter a Category Name");
-    return;
-  }
+    // ----------- Class Name Input ----------
+    const classNameInputField = document.getElementById("classNameInputField");
+    if (classNameInputField.value === "") {
+      console.log("Enter a name");
+      return;
+    }
 
-  // ----------------------------- Create a new Class object and send it to the server ------------------------------------
-  let newClass = {};
-  newClass.className = classNameInputField.value;
-  newClass.question = questionInputField.value;
-  newClass.answer = answerInputField.value;
-  newClass.category = categoryInputField.value;
-  newClass.unit = unitNameInputField.value;
+    // ----------- Question Input -------------
+    // todo: add logic to check the number of questions
+    const questionInputField = document.getElementById("questionInputField");
+    if (questionInputField.value === "") {
+      console.log("Enter questions");
+      return;
+    }
 
-  classNameInputField.value = "";
-  questionInputField.value = "";
-  answerInputField.value = "";
-  categoryInputField.value = "";
-  unitNameInputField.value = "";
-  // console.log("posting", newClass, "to server");
-  const url = `${apiServer}/questions/storeQuestion/`;
-  await fetch(url, {
-    method: "POST",
-    mode: "cors",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(newClass),
-  });
-  // console.log("clicked");
-  // await fetchInformation();
-  // console.log("newClass should be posted")
-  await fillClassListArray();
-};
+    // ------------Answer Input ----------------
+    // todo: add logic to check the number of answers
+    const answerInputField = document.getElementById("answerInputField");
+    if (answerInputField.value === "") {
+      console.log("Enter answers");
+      return;
+    }
 
-// ----------------------- Use customGameInformation to make API Call to post a New Game Setup --------------------------
-/* 
+    // ----------- Unit Input -------------------
+    const unitNameInputField = document.getElementById("unitNameInputField");
+    if (unitNameInputField.value === "") {
+      console.log("Enter a Unit Name");
+      return;
+    }
+
+    // ----------- Category Input ---------------
+
+    const categoryInputField = document.getElementById("categoryInputField");
+    if (categoryInputField.value === "") {
+      console.log("Enter a Category Name");
+      return;
+    }
+
+    // ----------------------------- Create a new Class object and send it to the server ------------------------------------
+    let newClass = {};
+    newClass.className = classNameInputField.value;
+    newClass.question = questionInputField.value;
+    newClass.answer = answerInputField.value;
+    newClass.category = categoryInputField.value;
+    newClass.unit = unitNameInputField.value;
+
+    classNameInputField.value = "";
+    questionInputField.value = "";
+    answerInputField.value = "";
+    categoryInputField.value = "";
+    unitNameInputField.value = "";
+    // console.log("posting", newClass, "to server");
+    const url = `${apiServer}/questions/storeQuestion/`;
+    await fetch(url, {
+      method: "POST",
+      mode: "cors",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(newClass),
+    });
+    // console.log("clicked");
+    // await fetchInformation();
+    // console.log("newClass should be posted")
+    await fillClassListArray();
+  };
+
+  // ----------------------- Use customGameInformation to make API Call to post a New Game Setup --------------------------
+  /* 
 Check the new game name field to make sure one has been entered. 
 If all is well, this sends the customGameInformation global object to the API. 
 Then, fillAvailableGamesList() is run.
@@ -277,198 +417,198 @@ Then, fillAvailableGamesList() is run.
 
 
 */
-// ------------------------------------- contains fillAvailableGamesList() ----------------------------------------------
+  // ------------------------------------- contains fillAvailableGamesList() ----------------------------------------------
 
-const postGameplayInformation = async () => {
-  const gameNameInput = document.getElementById("gameNameField");
+  const postGameplayInformation = async () => {
+    const gameNameInput = document.getElementById("gameNameField");
 
-  // -------------------------------- Check that a game name has been entered --------------------------------------------
-  if (gameNameInput.value === "") {
-    console.log("needs a value");
-    return;
+    // -------------------------------- Check that a game name has been entered --------------------------------------------
+    if (gameNameInput.value === "") {
+      console.log("needs a value");
+      return;
+    }
+
+    // -------------- Add gameNameInput field value to the customGameInformation object to send -----------------------------
+    customGameInformation.gameName = gameNameInput.value;
+    customGameInformation.className =
+      document.getElementById("class-names").value;
+
+    // Todo: socket
+    const url = `${apiServer}/gameplay/gameplayinformation/`;
+
+    await fetch(url, {
+      method: "POST",
+      mode: "cors",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(customGameInformation),
+    });
+
+    // fillAvailableGamesList(); //todo: check if this is needed
+    addedCategories.innerHTML = addedCategoriesDefaultHTML;
+  };
+
+  // ----------------------------- Submit New Class Event Listener ----------------------------------------------------------
+  if (document.getElementById("submitNewClassBtn")) {
+    document
+      .getElementById("submitNewClassBtn")
+
+      .addEventListener("click", postNewClassName);
   }
-
-  // -------------- Add gameNameInput field value to the customGameInformation object to send -----------------------------
-  customGameInformation.gameName = gameNameInput.value;
-  customGameInformation.className =
-    document.getElementById("class-names").value;
-
-  // Todo: socket
-  const url = `${apiServer}/gameplay/gameplayinformation/`;
-
-  await fetch(url, {
-    method: "POST",
-    mode: "cors",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(customGameInformation),
-  });
-
-  // fillAvailableGamesList(); //todo: check if this is needed
-  addedCategories.innerHTML = addedCategoriesDefaultHTML;
-};
-
-// ----------------------------- Submit New Class Event Listener ----------------------------------------------------------
-if (document.getElementById("submitNewClassBtn")) {
-  document
-    .getElementById("submitNewClassBtn")
-
-    .addEventListener("click", postNewClassName);
-}
-// ----------------------------------------------------- GET -------------------------------------------------------------
-// ---------------------------------- Fetch Questions, Answers, Categories, and Class Names ------------------------------
-/* 
+  // ----------------------------------------------------- GET -------------------------------------------------------------
+  // ---------------------------------- Fetch Questions, Answers, Categories, and Class Names ------------------------------
+  /* 
 
 This function creates the global categoriesObject, which is used to fill questions, answers, classes, and categories for the fillClasslistArray function
 
 */
 
-//! The categories object being fetched isn't complete
+  //! The categories object being fetched isn't complete
 
-const fetchInformation = async () => {
-  const url = `${apiServer}/questions/`;
-  let result = await fetch(url);
-  categoriesObject = await result.json();
-  // todo are classList and categoriesObject.getAllQuestions the same thing? Can they be reduced to one variable?
-  classList = categoriesObject.getAllQuestions;
-};
+  const fetchInformation = async () => {
+    const url = `${apiServer}/questions/`;
+    let result = await fetch(url);
+    categoriesObject = await result.json();
+    // todo are classList and categoriesObject.getAllQuestions the same thing? Can they be reduced to one variable?
+    classList = categoriesObject.getAllQuestions;
+  };
 
-// -------------------------------------------- Fetch Student List API Call ---------------------------------------------
-const fetchStudentList = async () => {
-  const url = `${apiServer}/user/`;
-  let result = await fetch(url);
-  let data = await result.json();
-};
+  // -------------------------------------------- Fetch Student List API Call ---------------------------------------------
+  const fetchStudentList = async () => {
+    const url = `${apiServer}/user/`;
+    let result = await fetch(url);
+    let data = await result.json();
+  };
 
-// ---------------------------------- Fetch Games from API and set to availableGames object ------------------------------
-const fetchGames = async () => {
-  const url = `${apiServer}/gameplay/`;
-  let result = await fetch(url);
-  availableGames = await result.json();
-};
+  // ---------------------------------- Fetch Games from API and set to availableGames object ------------------------------
+  const fetchGames = async () => {
+    const url = `${apiServer}/gameplay/`;
+    let result = await fetch(url);
+    availableGames = await result.json();
+  };
 
-//Todo - delete gameNameInput when the number of checked boxes goes below 6
+  //Todo - delete gameNameInput when the number of checked boxes goes below 6
 
-// ------------------------------------------------- Edit Page Sequence ---------------------------------------------------
-// ---------------------------------------- Run the Functions in the Correct Order ----------------------------------------
-// First, get the information from the api
-await fetchInformation();
-
-// Fill the classList array for
-fillClassListArray();
-
-fillClassListDropdown();
-
-fillCategoryOptionsDropdown();
-
-fillAvailableGamesList();
-
-// -------------------------------------- Fill the customContent array --------------------------------------------------
-
-function fillCustomContentArray(
-  gameAnswers,
-  gameQuestions,
-  gameCategories,
-  gameClassName
-) {
-  // --------Push Information for the Gameplay Categories/Class/Questions/Answers/Scores to the customContentArray -------------
-  // console.log("gameAnswers",gameAnswers)
-  // for (let index = 0; index < gameAnswers.length; index++) {
-  //   customContentArray.push({
-  //     category: gameCategories[0],
-  //     className: gameClassName[0],
-  //     question: gameQuestions[index],
-  //     answer: gameAnswers[index],
-  //     score: (index + 1) * 200,
-  //   });
-  //   // console.log("customContentArray: ",customContentArray)
-  // }
-}
-
-async function fillClassListArray() {
+  // ------------------------------------------------- Edit Page Sequence ---------------------------------------------------
+  // ---------------------------------------- Run the Functions in the Correct Order ----------------------------------------
+  // First, get the information from the api
   await fetchInformation();
-  await fillClassListDropdown();
 
-  // -------------------------------------- Clear the classList array ---------------------------------------------------
-  classList = [];
+  // Fill the classList array for
+  fillClassListArray();
 
-  // -------------------------------------- Clear the customContentArray --------------------------------------------------
+  fillClassListDropdown();
 
-  // customContentArray = []; //! Maybe remove this. Did not check into whether this is necessary.
+  fillCategoryOptionsDropdown();
 
-  for (let i = 0; i < categoriesObject.getAllQuestions.length; i++) {
-    const gameAnswers =
-      categoriesObject.getAllQuestions[i].answer.split("\r\n");
-    const gameQuestions =
-      categoriesObject.getAllQuestions[i].question.split("\r\n");
-    const gameCategories =
-      categoriesObject.getAllQuestions[i].category.split("\r\n");
-    const gameClassName =
-      categoriesObject.getAllQuestions[i].className.split("\r\n");
+  fillAvailableGamesList();
 
-    // ------------------------------------- Push Class Names & IDs to the classList array --------------------------------
-    classList.push({
-      className: categoriesObject.getAllQuestions[i].className,
-      id: categoriesObject.getAllQuestions[i]._id,
-    });
-    fillCustomContentArray(
-      gameAnswers,
-      gameQuestions,
-      gameCategories,
-      gameClassName
-    );
+  // -------------------------------------- Fill the customContent array --------------------------------------------------
+
+  function fillCustomContentArray(
+    gameAnswers,
+    gameQuestions,
+    gameCategories,
+    gameClassName
+  ) {
+    // --------Push Information for the Gameplay Categories/Class/Questions/Answers/Scores to the customContentArray -------------
+    // console.log("gameAnswers",gameAnswers)
+    // for (let index = 0; index < gameAnswers.length; index++) {
+    //   customContentArray.push({
+    //     category: gameCategories[0],
+    //     className: gameClassName[0],
+    //     question: gameQuestions[index],
+    //     answer: gameAnswers[index],
+    //     score: (index + 1) * 200,
+    //   });
+    //   // console.log("customContentArray: ",customContentArray)
+    // }
   }
-}
 
-fillClassListArray();
+  async function fillClassListArray() {
+    await fetchInformation();
+    await fillClassListDropdown();
 
-// ---------------------------------- Function to fill the Category Options List ------------------------------------------
-function fillCategoryOptionsDropdown() {
-  // ----------------------------------------------------------- Clear checkboxes ----------------------------------------
-  if (document.getElementById(`checkBoxes`)) {
-    document.getElementById(`checkBoxes`).innerHTML = "";
-  }
-  // -------------------------------------------- clear the results array and the resultsHTML ----------------------------
-  results = [];
-  resultsHTML = "";
-  gameplayCategoryObject = {};
-  customGameInformation = {};
-  customCategories = {};
-  customQuestions = {};
-  customAnswers = {};
-  customGameName = "";
-  const addedCategories = document.getElementById("addedCategories");
+    // -------------------------------------- Clear the classList array ---------------------------------------------------
+    classList = [];
 
-  if (addedCategories) {
-    addedCategories.innerHTML = addedCategoriesDefaultHTML;
-  }
-  // ---Check through the fetched category categoriesObject and Fill the results with categories of the same class name ---
-  for (let i = 0; i < categoriesObject.getAllQuestions.length; i++) {
-    if (
-      categoriesObject.getAllQuestions[i].className ===
-      document.getElementById("class-names")?.value
-    ) {
-      // ------------- For each category that matches the selected class, push an object into results ---------------------
-      results.push({
-        question: categoriesObject.getAllQuestions[i].question,
-        answer: categoriesObject.getAllQuestions[i].answer,
+    // -------------------------------------- Clear the customContentArray --------------------------------------------------
+
+    // customContentArray = []; //! Maybe remove this. Did not check into whether this is necessary.
+
+    for (let i = 0; i < categoriesObject.getAllQuestions.length; i++) {
+      const gameAnswers =
+        categoriesObject.getAllQuestions[i].answer.split("\r\n");
+      const gameQuestions =
+        categoriesObject.getAllQuestions[i].question.split("\r\n");
+      const gameCategories =
+        categoriesObject.getAllQuestions[i].category.split("\r\n");
+      const gameClassName =
+        categoriesObject.getAllQuestions[i].className.split("\r\n");
+
+      // ------------------------------------- Push Class Names & IDs to the classList array --------------------------------
+      classList.push({
         className: categoriesObject.getAllQuestions[i].className,
-        category: categoriesObject.getAllQuestions[i].category,
-        score: categoriesObject.getAllQuestions[i].score,
-        unit: categoriesObject.getAllQuestions[i].unit,
+        id: categoriesObject.getAllQuestions[i]._id,
       });
+      fillCustomContentArray(
+        gameAnswers,
+        gameQuestions,
+        gameCategories,
+        gameClassName
+      );
     }
   }
 
-  // ---------------- Use the results array of category objects to create HTML in the Select Questions section --------
+  fillClassListArray();
 
-  // ----------------------------------------------------- Primary Category -------------------------------------------
-  // Add the first category information from the results array to the resultsHTML string. This is done separately from the rest to accomidate the bootstrap differences.
+  // ---------------------------------- Function to fill the Category Options List ------------------------------------------
+  function fillCategoryOptionsDropdown() {
+    // ----------------------------------------------------------- Clear checkboxes ----------------------------------------
+    if (document.getElementById(`checkBoxes`)) {
+      document.getElementById(`checkBoxes`).innerHTML = "";
+    }
+    // -------------------------------------------- clear the results array and the resultsHTML ----------------------------
+    results = [];
+    resultsHTML = "";
+    gameplayCategoryObject = {};
+    customGameInformation = {};
+    customCategories = {};
+    customQuestions = {};
+    customAnswers = {};
+    customGameName = "";
+    const addedCategories = document.getElementById("addedCategories");
 
-  for (let i = 0; i < results.length; i++) {
-    if (i === 0) {
-      resultsHTML += `
+    if (addedCategories) {
+      addedCategories.innerHTML = addedCategoriesDefaultHTML;
+    }
+    // ---Check through the fetched category categoriesObject and Fill the results with categories of the same class name ---
+    for (let i = 0; i < categoriesObject.getAllQuestions.length; i++) {
+      if (
+        categoriesObject.getAllQuestions[i].className ===
+        document.getElementById("class-names")?.value
+      ) {
+        // ------------- For each category that matches the selected class, push an object into results ---------------------
+        results.push({
+          question: categoriesObject.getAllQuestions[i].question,
+          answer: categoriesObject.getAllQuestions[i].answer,
+          className: categoriesObject.getAllQuestions[i].className,
+          category: categoriesObject.getAllQuestions[i].category,
+          score: categoriesObject.getAllQuestions[i].score,
+          unit: categoriesObject.getAllQuestions[i].unit,
+        });
+      }
+    }
+
+    // ---------------- Use the results array of category objects to create HTML in the Select Questions section --------
+
+    // ----------------------------------------------------- Primary Category -------------------------------------------
+    // Add the first category information from the results array to the resultsHTML string. This is done separately from the rest to accomidate the bootstrap differences.
+
+    for (let i = 0; i < results.length; i++) {
+      if (i === 0) {
+        resultsHTML += `
     <div class="accordion" id="accordionExample">
     <div class="accordion-item">
       <h2 class="accordion-header accordionClassListHeader" id="accordionHeader_${i}">
@@ -499,33 +639,33 @@ function fillCategoryOptionsDropdown() {
       </div>
     </div>
     `;
-    }
+      }
 
-    const element = document.createElement("div");
-    element.value = classList[i].className;
-    element.innerText = classList[i].className;
-    element.id = classList[i].id;
-    element.innerText = categoriesObject.getAllQuestions[i].question;
+      const element = document.createElement("div");
+      element.value = classList[i].className;
+      element.innerText = classList[i].className;
+      element.id = classList[i].id;
+      element.innerText = categoriesObject.getAllQuestions[i].question;
 
-    for (let i = 0; i < results.length; i++) {
-      document.getElementById("questionList").innerHTML =
-        "<span>" +
-        resultsHTML +
-        `
+      for (let i = 0; i < results.length; i++) {
+        document.getElementById("questionList").innerHTML =
+          "<span>" +
+          resultsHTML +
+          `
 
         <div class="form-group" name="className">
       </span>`;
-    }
+      }
 
-    // }
+      // }
 
-    // ! -------------------------------------------- Secondary categories: ---------------------------------------------
+      // ! -------------------------------------------- Secondary categories: ---------------------------------------------
 
-    if (results.length > 1 && i >= 1) {
-      // console.log("secondary:");
-      let dataBsTarget = `collapse${i}`;
-      // resultsHTML = ""
-      resultsHTML += `
+      if (results.length > 1 && i >= 1) {
+        // console.log("secondary:");
+        let dataBsTarget = `collapse${i}`;
+        // resultsHTML = ""
+        resultsHTML += `
 <div class = "accordion-item">
 <h2 class="accordion-header accordionClassListHeader" id="accordionHeader_${i}">
             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#${dataBsTarget}" aria-expanded="false" aria-controls="${dataBsTarget}">
@@ -555,263 +695,271 @@ function fillCategoryOptionsDropdown() {
         </div>
         `;
 
-      const element = document.createElement("div");
-      element.value = classList[i].className;
-      element.innerText = classList[i].className;
-      element.id = classList[i].id;
-      element.innerText = categoriesObject.getAllQuestions[i].question;
-      // document.getElementById("questionList").innerHTML = categoriesObject.getAllQuestions[i].question;
-      for (let i = 0; i < results.length; i++) {
-        document.getElementById("questionList").innerHTML = resultsHTML;
+        const element = document.createElement("div");
+        element.value = classList[i].className;
+        element.innerText = classList[i].className;
+        element.id = classList[i].id;
+        element.innerText = categoriesObject.getAllQuestions[i].question;
+        // document.getElementById("questionList").innerHTML = categoriesObject.getAllQuestions[i].question;
+        for (let i = 0; i < results.length; i++) {
+          document.getElementById("questionList").innerHTML = resultsHTML;
+        }
+        const categorySelectBtn = document.getElementById(
+          `categorySelectBtn${i}`
+        );
+
+        categorySelectBtn?.addEventListener("click", () => {
+          console.log("click");
+        });
       }
-      const categorySelectBtn = document.getElementById(
-        `categorySelectBtn${i}`
+    }
+    addCheckboxes();
+
+    // !---------------------------------- Checkbox Functionality -------------------------------------------------
+    for (
+      let i = 0;
+      i < document.getElementsByClassName("checkboxInput").length;
+      i++
+    ) {
+      //! Listen to checkbox for checked or unchecked
+      document
+        .getElementsByClassName("checkboxInput")
+        [i].addEventListener("change", () => checkNumberOfCheckboxesTicked(i));
+    }
+  }
+
+  let catIndex = 0;
+
+  // --------------------------------------- Check to see how many category boxes have been checked -----------------------
+
+  // ------------------------If 6 have been checked, make a submit button and name entry field (change this?) --------------
+  function checkNumberOfCheckboxesTicked(i) {
+    // If checked...
+    if (document.getElementsByClassName("checkboxInput")[i].checked === true) {
+      // Check for existing gameplayItems list on the page.
+      const gameplayItems = document.getElementsByClassName("gameplayItems");
+
+      //If the length of gameplayItems is less than 6, allow the item to be appended
+      console.log("gameplayItems.length:", gameplayItems.length);
+
+      // If the length of gameplayItems is greater or equal to 6, deselect the most recent box and warn that the limit has been reached.
+
+      if (gameplayItems.length >= 6) {
+        alert("There's a maximum of 6 categories.\n Uncheck one to add this.");
+        document.getElementsByClassName("checkboxInput")[i].checked = false;
+        return;
+      }
+      if (gameplayItems.length < 6) {
+        console.log("less than 6");
+
+        // Add two new keys to gameplayCategoryObject
+
+        if (document.getElementsByClassName("checkboxInput")[i].checked) {
+          gameplayCategoryObject["id_" + i] = i;
+          gameplayCategoryObject["content_" + i] = results[i];
+
+          // Create a new div element, gameplayItem, with a className "gameplayItems", and add text (results.category, .className, and .unit)
+          const gameplayItem = document.createElement("li");
+          gameplayItem.id = `gameplayItem_${i}`;
+          gameplayItem.className = "gameplayItems";
+          gameplayItem.innerText = `${results[i].category},${results[i].className}, ${results[i].unit}`;
+
+          customCategories[`category_${catIndex}`] = results[i].category;
+          customGameName = "gameName";
+          customQuestions[`question_${i}`] = results[i].question;
+          customAnswers[`answer_${i}`] = results[i].answer;
+
+          // Append the new gameplayItem to "tempCategories" on the page
+          const tempCategories = document.getElementById("tempCategories");
+          tempCategories.appendChild(gameplayItem);
+          // Check if the length of gameplayItems is equal to 6,
+          catIndex++;
+        }
+
+        if (gameplayItems.length === 6) {
+          // Create a "Start Game" button
+          const addBtnPosition = document.createElement("div");
+          addBtnPosition.id = "addBtnPosition";
+
+          const addGameBtn = document.createElement("button");
+          addGameBtn.type = "button";
+          addGameBtn.id = "addGameBtn";
+          addGameBtn.innerText = "Create Game";
+
+          const gameNameField = document.createElement("input");
+          gameNameField.id = "gameNameField";
+
+          // const addBtnPosition = document.getElementById("addBtnPosition");
+          // Add the "Start Game" button to "addedCategories"
+          document
+            .getElementById("addedCategories")
+            .appendChild(addBtnPosition);
+          addBtnPosition.appendChild(addGameBtn);
+          addBtnPosition.appendChild(gameNameField);
+          // Add an event listener for click
+          addGameBtn.addEventListener("click", postGameplayInformation);
+        }
+      }
+    }
+
+    if (document.getElementsByClassName("checkboxInput")[i].checked === false) {
+      // console.log("gameplayItems:",gameplayItems)
+      console.log("gameplayCategoryObject:", gameplayCategoryObject);
+
+      const gameplayItem = document.getElementById(`gameplayItem_${i}`);
+
+      gameplayItem.parentElement.removeChild(gameplayItem);
+      delete gameplayCategoryObject["content_" + i];
+      delete gameplayCategoryObject["id_" + i];
+
+      delete customCategories[`category_${i}`];
+      customGameName = "";
+      delete customQuestions[`question_${i}`];
+      delete customAnswers[`answer_${i}`];
+
+      const startbtn = document.getElementById("addGameBtn");
+      if (startbtn) {
+        startbtn.remove();
+      }
+    }
+    customGameInformation.question = customQuestions;
+    customGameInformation.answer = customAnswers;
+    customGameInformation.gameName = customGameName;
+    customGameInformation.category = customCategories;
+  }
+
+  // fillClassListDropdown();
+
+  //todo ------------------------ Event Listener to run fillCategoryOptionsDropdown() on change !I don't think this is working...
+  document.getElementById("class-names")?.addEventListener("change", () => {
+    fillCategoryOptionsDropdown();
+    fillAvailableGamesList();
+  });
+
+  // ! --------------------------------------- Add Checkboxes to Categories List --------------------------
+  function addCheckboxes() {
+    if (document.getElementsByClassName("accordionClassListHeader")) {
+      const accordionHeaders = document.getElementsByClassName(
+        "accordionClassListHeader"
       );
+      for (let i = 0; i < accordionHeaders.length; i++) {
+        const accordionHeader = document.getElementById(`accordionHeader_${i}`);
 
-      categorySelectBtn?.addEventListener("click", () => {
-        console.log("click");
-      });
-    }
-  }
-  addCheckboxes();
+        const checkboxLabel = document.createElement("label");
+        checkboxLabel.htmlFor = `btncheck${i + 1}`;
+        checkboxLabel.innerText = "Add Category to Game:";
+        checkboxLabel.className = "checkboxLabel";
 
-  // !---------------------------------- Checkbox Functionality -------------------------------------------------
-  for (
-    let i = 0;
-    i < document.getElementsByClassName("checkboxInput").length;
-    i++
-  ) {
-    //! Listen to checkbox for checked or unchecked
-    document
-      .getElementsByClassName("checkboxInput")
-      [i].addEventListener("change", () => checkNumberOfCheckboxesTicked(i));
-  }
-}
+        const checkBoxInput = document.createElement("input");
+        checkBoxInput.type = "checkbox";
+        checkBoxInput.className = "checkboxInput";
+        checkBoxInput.id = `btncheck${i + 1}`;
+        checkBoxInput.autocomplete = "off";
 
-let catIndex = 0;
+        const deleteSection = document.createElement("div");
+        deleteSection.id = `deleteSection_${i}`;
 
-// --------------------------------------- Check to see how many category boxes have been checked -----------------------
+        const deleteCategoryLabel = document.createElement("label");
+        deleteCategoryLabel.htmlFor = `deleteCategoryCheck${i + 1}`;
+        deleteCategoryLabel.innerText = "Delete Category:";
+        deleteCategoryLabel.className = "deleteCatLabel";
 
-// ------------------------If 6 have been checked, make a submit button and name entry field (change this?) --------------
-function checkNumberOfCheckboxesTicked(i) {
-  // If checked...
-  if (document.getElementsByClassName("checkboxInput")[i].checked === true) {
-    // Check for existing gameplayItems list on the page.
-    const gameplayItems = document.getElementsByClassName("gameplayItems");
+        const deleteCategoryInput = document.createElement("input");
+        deleteCategoryInput.type = "input";
+        deleteCategoryInput.className = "deleteCatInput";
+        deleteCategoryInput.id = `deleteCatInput${i + 1}`;
+        deleteCategoryInput.autocomplete = "off";
+        deleteCategoryInput.placeholder = `enter "delete" to delete`;
 
-    //If the length of gameplayItems is less than 6, allow the item to be appended
-    console.log("gameplayItems.length:", gameplayItems.length);
+        const deleteArea = document.createElement("div");
+        deleteArea.id = "deleteArea";
 
-    // If the length of gameplayItems is greater or equal to 6, deselect the most recent box and warn that the limit has been reached.
+        const deleteImage = document.createElement("img");
+        deleteImage.type = "button";
+        deleteImage.src = "./assets/delete.png";
+        deleteImage.alt = "Del Img";
+        deleteImage.className = "deleteImg";
+        deleteImage.id = `deleteImg${i}`;
+        // if (deleteCategoryInput.innerText.toLocaleLowerCase() = "delete")
 
-    if (gameplayItems.length >= 6) {
-      alert("There's a maximum of 6 categories.\n Uncheck one to add this.");
-      document.getElementsByClassName("checkboxInput")[i].checked = false;
-      return;
-    }
-    if (gameplayItems.length < 6) {
-      console.log("less than 6");
-
-      // Add two new keys to gameplayCategoryObject
-
-      if (document.getElementsByClassName("checkboxInput")[i].checked) {
-        gameplayCategoryObject["id_" + i] = i;
-        gameplayCategoryObject["content_" + i] = results[i];
-
-        // Create a new div element, gameplayItem, with a className "gameplayItems", and add text (results.category, .className, and .unit)
-        const gameplayItem = document.createElement("li");
-        gameplayItem.id = `gameplayItem_${i}`;
-        gameplayItem.className = "gameplayItems";
-        gameplayItem.innerText = `${results[i].category},${results[i].className}, ${results[i].unit}`;
-
-        customCategories[`category_${catIndex}`] = results[i].category;
-        customGameName = "gameName";
-        customQuestions[`question_${i}`] = results[i].question;
-        customAnswers[`answer_${i}`] = results[i].answer;
-
-        // Append the new gameplayItem to "tempCategories" on the page
-        const tempCategories = document.getElementById("tempCategories");
-        tempCategories.appendChild(gameplayItem);
-        // Check if the length of gameplayItems is equal to 6,
-        catIndex++;
-      }
-
-      if (gameplayItems.length === 6) {
-        // Create a "Start Game" button
-        const addBtnPosition = document.createElement("div");
-        addBtnPosition.id = "addBtnPosition";
-
-        const addGameBtn = document.createElement("button");
-        addGameBtn.type = "button";
-        addGameBtn.id = "addGameBtn";
-        addGameBtn.innerText = "Create Game";
-
-        const gameNameField = document.createElement("input");
-        gameNameField.id = "gameNameField";
-
-        // const addBtnPosition = document.getElementById("addBtnPosition");
-        // Add the "Start Game" button to "addedCategories"
-        document.getElementById("addedCategories").appendChild(addBtnPosition);
-        addBtnPosition.appendChild(addGameBtn);
-        addBtnPosition.appendChild(gameNameField);
-        // Add an event listener for click
-        addGameBtn.addEventListener("click", postGameplayInformation);
-      }
-    }
-  }
-
-  if (document.getElementsByClassName("checkboxInput")[i].checked === false) {
-    // console.log("gameplayItems:",gameplayItems)
-    console.log("gameplayCategoryObject:", gameplayCategoryObject);
-
-    const gameplayItem = document.getElementById(`gameplayItem_${i}`);
-
-    gameplayItem.parentElement.removeChild(gameplayItem);
-    delete gameplayCategoryObject["content_" + i];
-    delete gameplayCategoryObject["id_" + i];
-
-    delete customCategories[`category_${i}`];
-    customGameName = "";
-    delete customQuestions[`question_${i}`];
-    delete customAnswers[`answer_${i}`];
-
-    const startbtn = document.getElementById("addGameBtn");
-    if (startbtn) {
-      startbtn.remove();
-    }
-  }
-  customGameInformation.question = customQuestions;
-  customGameInformation.answer = customAnswers;
-  customGameInformation.gameName = customGameName;
-  customGameInformation.category = customCategories;
-}
-
-// fillClassListDropdown();
-
-//todo ------------------------ Event Listener to run fillCategoryOptionsDropdown() on change !I don't think this is working...
-document.getElementById("class-names")?.addEventListener("change", () => {
-  fillCategoryOptionsDropdown();
-  fillAvailableGamesList();
-});
-
-// ! --------------------------------------- Add Checkboxes to Categories List --------------------------
-function addCheckboxes() {
-  if (document.getElementsByClassName("accordionClassListHeader")) {
-    const accordionHeaders = document.getElementsByClassName(
-      "accordionClassListHeader"
-    );
-    for (let i = 0; i < accordionHeaders.length; i++) {
-      const accordionHeader = document.getElementById(`accordionHeader_${i}`);
-
-      const checkboxLabel = document.createElement("label");
-      checkboxLabel.htmlFor = `btncheck${i + 1}`;
-      checkboxLabel.innerText = "Add Category to Game:";
-      checkboxLabel.className = "checkboxLabel";
-
-      const checkBoxInput = document.createElement("input");
-      checkBoxInput.type = "checkbox";
-      checkBoxInput.className = "checkboxInput";
-      checkBoxInput.id = `btncheck${i + 1}`;
-      checkBoxInput.autocomplete = "off";
-
-      const deleteSection = document.createElement("div");
-      deleteSection.id = `deleteSection_${i}`;
-
-      const deleteCategoryLabel = document.createElement("label");
-      deleteCategoryLabel.htmlFor = `deleteCategoryCheck${i + 1}`;
-      deleteCategoryLabel.innerText = "Delete Category:";
-      deleteCategoryLabel.className = "deleteCatLabel";
-
-      const deleteCategoryInput = document.createElement("input");
-      deleteCategoryInput.type = "input";
-      deleteCategoryInput.className = "deleteCatInput";
-      deleteCategoryInput.id = `deleteCatInput${i + 1}`;
-      deleteCategoryInput.autocomplete = "off";
-      deleteCategoryInput.placeholder = `enter "delete" to delete`;
-
-      const deleteArea = document.createElement("div");
-      deleteArea.id = "deleteArea";
-
-      const deleteImage = document.createElement("img");
-      deleteImage.type = "button";
-      deleteImage.src = "./assets/delete.png";
-      deleteImage.alt = "Del Img";
-      deleteImage.className = "deleteImg";
-      deleteImage.id = `deleteImg${i}`;
-      // if (deleteCategoryInput.innerText.toLocaleLowerCase() = "delete")
-
-      accordionHeader.appendChild(checkboxLabel);
-      accordionHeader.appendChild(checkBoxInput);
-      accordionHeader.appendChild(deleteArea);
-      deleteArea.appendChild(deleteCategoryLabel);
-      deleteArea.appendChild(deleteCategoryInput);
-      deleteArea.appendChild(deleteImage);
-      deleteCategoryInput.addEventListener("change", () => {
-        let deleteCategoryValue = deleteCategoryInput.value.toLocaleLowerCase();
-        if (deleteCategoryValue === "delete") {
-          console.log("deletebuttonwillappear");
-          deleteImage.style.visibility = "visible";
-        } else {
-          deleteImage.style.visibility = "hidden";
-          console.log("nodeletebutton");
-        }
-      });
-
-      deleteImage.addEventListener("click", () => {
-        let deleteCategoryValue = deleteCategoryInput.value.toLocaleLowerCase();
-        if (deleteCategoryValue === "delete") {
-          console.log(`ready to delete ${i}`);
-
-          if (confirm(`Are you sure you want to delete ${i}?`) === true) {
-            console.log(`${i} has been deleted.`);
+        accordionHeader.appendChild(checkboxLabel);
+        accordionHeader.appendChild(checkBoxInput);
+        accordionHeader.appendChild(deleteArea);
+        deleteArea.appendChild(deleteCategoryLabel);
+        deleteArea.appendChild(deleteCategoryInput);
+        deleteArea.appendChild(deleteImage);
+        deleteCategoryInput.addEventListener("change", () => {
+          let deleteCategoryValue =
+            deleteCategoryInput.value.toLocaleLowerCase();
+          if (deleteCategoryValue === "delete") {
+            console.log("deletebuttonwillappear");
+            deleteImage.style.visibility = "visible";
+          } else {
             deleteImage.style.visibility = "hidden";
-            fillCategoryOptionsDropdown();
+            console.log("nodeletebutton");
           }
-        } else {
-          console.log(`clicked delete ${i}, but no text`);
-        }
-      });
+        });
+
+        deleteImage.addEventListener("click", () => {
+          let deleteCategoryValue =
+            deleteCategoryInput.value.toLocaleLowerCase();
+          if (deleteCategoryValue === "delete") {
+            console.log(`ready to delete ${i}`);
+
+            if (confirm(`Are you sure you want to delete ${i}?`) === true) {
+              console.log(`${i} has been deleted.`);
+              deleteImage.style.visibility = "hidden";
+              fillCategoryOptionsDropdown();
+            }
+          } else {
+            console.log(`clicked delete ${i}, but no text`);
+          }
+        });
+      }
     }
   }
-}
 
-// fillCategoryOptionsDropdown();
-// --------------------------------------------- Event Listener for the Questions List Button ----------------------------
+  // fillCategoryOptionsDropdown();
+  // --------------------------------------------- Event Listener for the Questions List Button ----------------------------
 
-document
-  .getElementById("questionsListBtn")
-  ?.addEventListener("click", fillCategoryOptionsDropdown);
+  document
+    .getElementById("questionsListBtn")
+    ?.addEventListener("click", fillCategoryOptionsDropdown);
 
-// for (let i = 0; i < 5; i++) {
-//   for (let n = 0; n < 6; n++) {
-//     customRoundOneArray.push(customContentArray[i + 6 * n]);
-//   }
-// }
+  // for (let i = 0; i < 5; i++) {
+  //   for (let n = 0; n < 6; n++) {
+  //     customRoundOneArray.push(customContentArray[i + 6 * n]);
+  //   }
+  // }
 
-// Now replace placeholder informatiom with the fetched information
-// roundOneArray = customRoundOneArray;
+  // Now replace placeholder informatiom with the fetched information
+  // roundOneArray = customRoundOneArray;
 
-// await fetchInformation();
+  // await fetchInformation();
 
-//! ----------------------------------------------- Fill Available Games List -------------------------------------------
+  //! ----------------------------------------------- Fill Available Games List -------------------------------------------
 
-async function fillAvailableGamesList() {
-  const availableGamesList = document.getElementById("availableGamesList");
-  if (availableGamesList) {
-    // console.log("here")
+  async function fillAvailableGamesList() {
+    const availableGamesList = document.getElementById("availableGamesList");
+    if (availableGamesList) {
+      // console.log("here")
 
-    // --------------------------- Clear out Games List -------------
-    availableGamesList.innerHTML = "";
-    await fetchGames();
+      // --------------------------- Clear out Games List -------------
+      availableGamesList.innerHTML = "";
+      await fetchGames();
 
-    let availableGamesResults = [];
-    //----------------------- First Games List Item -------------
+      let availableGamesResults = [];
+      //----------------------- First Games List Item -------------
 
-    // console.log(availableGames.getAllGameplayInformation);
-    for (let i = 0; i < availableGames.getAllGameplayInformation.length; i++) {
-      // console.log("availablegames.classname:",availableGames.getAllGameplayInformation[i].className)
-      // console.log("dropdownselectedvalue:",document.getElementById("class-names").value)
-      /* 
+      // console.log(availableGames.getAllGameplayInformation);
+      for (
+        let i = 0;
+        i < availableGames.getAllGameplayInformation.length;
+        i++
+      ) {
+        // console.log("availablegames.classname:",availableGames.getAllGameplayInformation[i].className)
+        // console.log("dropdownselectedvalue:",document.getElementById("class-names").value)
+        /* 
 (
         categoriesObject.getAllQuestions[i].className ===
         document.getElementById("class-names")?.value
@@ -819,116 +967,119 @@ async function fillAvailableGamesList() {
 
 */
 
-      // Check the fetched games list class name against the dropdown selected class
+        // Check the fetched games list class name against the dropdown selected class
 
-      if (
-        availableGames.getAllGameplayInformation[i].className ===
-        document.getElementById("class-names").value
-      ) {
-        availableGamesResults.push(availableGames.getAllGameplayInformation[i]);
-        // console.log(availableGames.getAllGameplayInformation[i])
-        // console.log(availableGamesResults);
+        if (
+          availableGames.getAllGameplayInformation[i].className ===
+          document.getElementById("class-names").value
+        ) {
+          availableGamesResults.push(
+            availableGames.getAllGameplayInformation[i]
+          );
+          // console.log(availableGames.getAllGameplayInformation[i])
+          // console.log(availableGamesResults);
+        }
       }
-    }
-    // ------------------------------ Creating HTML elements ---------------------------------------
+      // ------------------------------ Creating HTML elements ---------------------------------------
 
-    // console.log("availableGamesResults", availableGamesResults);
-    for (let i = 0; i < availableGamesResults.length; i++) {
-      const gamesListAccordionItem = document.createElement("div");
-      gamesListAccordionItem.className = "accordion-item accordionGamesItems";
-      availableGamesList.appendChild(gamesListAccordionItem);
+      // console.log("availableGamesResults", availableGamesResults);
+      for (let i = 0; i < availableGamesResults.length; i++) {
+        const gamesListAccordionItem = document.createElement("div");
+        gamesListAccordionItem.className = "accordion-item accordionGamesItems";
+        availableGamesList.appendChild(gamesListAccordionItem);
 
-      const accordionHeader = document.createElement("h2");
-      accordionHeader.className = "accordion-header";
-      accordionHeader.id = `gamesListAccordionHeader_${i}`;
-      gamesListAccordionItem.appendChild(accordionHeader);
+        const accordionHeader = document.createElement("h2");
+        accordionHeader.className = "accordion-header";
+        accordionHeader.id = `gamesListAccordionHeader_${i}`;
+        gamesListAccordionItem.appendChild(accordionHeader);
 
-      const gamesListAccordionButton = document.createElement("button");
-      gamesListAccordionButton.className = "accordion-button collapsed";
-      gamesListAccordionButton.type = "button";
-      gamesListAccordionButton.setAttribute("data-bs-toggle", "collapse");
-      gamesListAccordionButton.setAttribute(
-        "data-bs-target",
-        `#collapseGame${i}`
-      );
-      gamesListAccordionButton.ariaExpanded = "true";
-      gamesListAccordionButton.setAttribute(
-        "aria-controls",
-        `collapseGame${i}`
-      );
-
-      gamesListAccordionButton.innerText =
-        availableGames.getAllGameplayInformation[i].gameName;
-      accordionHeader.appendChild(gamesListAccordionButton);
-
-      // ---------------- On click, send the selected Game Information to the currentGame global object ------------------
-      const gameSelector = document.createElement("a");
-      gameSelector.href = `${PREFIX}${PORT}${ROUND1PATH}`;
-      gameSelector.innerText = "Start Game";
-      gameSelector.addEventListener("click", () => {
-        console.log("Starting Game...", i);
-        currentGame = availableGames.getAllGameplayInformation[i];
-        // console.log(currentGame.question)
-        // sessionStorage.clear()
-        sessionStorage.setItem(
-          "question",
-          JSON.stringify(currentGame.question)
+        const gamesListAccordionButton = document.createElement("button");
+        gamesListAccordionButton.className = "accordion-button collapsed";
+        gamesListAccordionButton.type = "button";
+        gamesListAccordionButton.setAttribute("data-bs-toggle", "collapse");
+        gamesListAccordionButton.setAttribute(
+          "data-bs-target",
+          `#collapseGame${i}`
         );
-        sessionStorage.setItem("answer", JSON.stringify(currentGame.answer));
-        sessionStorage.setItem("className", currentGame.className);
-        sessionStorage.setItem("gameName", currentGame.gameName);
-        sessionStorage.setItem(
-          "category",
-          JSON.stringify(currentGame.category)
+        gamesListAccordionButton.ariaExpanded = "true";
+        gamesListAccordionButton.setAttribute(
+          "aria-controls",
+          `collapseGame${i}`
         );
-        console.log("sessionStorage:", sessionStorage);
-      });
-      accordionHeader.appendChild(gameSelector);
 
-      const collapseGamei = document.createElement("div");
-      collapseGamei.id = `collapseGame${i}`;
-      collapseGamei.className = "accordion-collapse collapse";
-      collapseGamei.setAttribute("data-bs-parent", "#availableGamesList");
-      gamesListAccordionItem.appendChild(collapseGamei);
+        gamesListAccordionButton.innerText =
+          availableGames.getAllGameplayInformation[i].gameName;
+        accordionHeader.appendChild(gamesListAccordionButton);
 
-      const accordionGamesListBody = document.createElement("div");
-      accordionGamesListBody.className = "accordion-body";
-      collapseGamei.appendChild(accordionGamesListBody);
+        // ---------------- On click, send the selected Game Information to the currentGame global object ------------------
+        const gameSelector = document.createElement("a");
+        gameSelector.href = `${PREFIX}${PORT}${ROUND1PATH}`;
+        gameSelector.innerText = "Start Game";
+        gameSelector.addEventListener("click", () => {
+          console.log("Starting Game...", i);
+          currentGame = availableGames.getAllGameplayInformation[i];
+          // console.log(currentGame.question)
+          // sessionStorage.clear()
+          sessionStorage.setItem(
+            "question",
+            JSON.stringify(currentGame.question)
+          );
+          sessionStorage.setItem("answer", JSON.stringify(currentGame.answer));
+          sessionStorage.setItem("className", currentGame.className);
+          sessionStorage.setItem("gameName", currentGame.gameName);
+          sessionStorage.setItem(
+            "category",
+            JSON.stringify(currentGame.category)
+          );
+          console.log("sessionStorage:", sessionStorage);
+        });
+        accordionHeader.appendChild(gameSelector);
 
-      const gamesListInnerText = document.createElement("div");
-      gamesListInnerText.className = "gamesListInnerText";
-      gamesListInnerText.id = `gamesListInnerText_${i}`;
+        const collapseGamei = document.createElement("div");
+        collapseGamei.id = `collapseGame${i}`;
+        collapseGamei.className = "accordion-collapse collapse";
+        collapseGamei.setAttribute("data-bs-parent", "#availableGamesList");
+        gamesListAccordionItem.appendChild(collapseGamei);
 
-      const item = availableGames.getAllGameplayInformation;
+        const accordionGamesListBody = document.createElement("div");
+        accordionGamesListBody.className = "accordion-body";
+        collapseGamei.appendChild(accordionGamesListBody);
 
-      /* 
+        const gamesListInnerText = document.createElement("div");
+        gamesListInnerText.className = "gamesListInnerText";
+        gamesListInnerText.id = `gamesListInnerText_${i}`;
+
+        const item = availableGames.getAllGameplayInformation;
+
+        /* 
     Iterate over the available games
 
     */
-      let categories = "";
-      for (let c = 1; c < Object.values(item).length + 1; c++) {
-        // categories = "";
-        for (let i = 0; i < Object.values(item[c - 1].category).length; i++) {
-          // console.log("item:", item[i].category);
+        let categories = "";
+        for (let c = 1; c < Object.values(item).length + 1; c++) {
+          // categories = "";
+          for (let i = 0; i < Object.values(item[c - 1].category).length; i++) {
+            // console.log("item:", item[i].category);
 
-          // console.log(item[c - 1].category[`category_${i}`]);
+            // console.log(item[c - 1].category[`category_${i}`]);
 
-          categories +=
-            `Category ${c}: ` + item[c - 1].category[`category_${i}`];
-          categories += "</br>";
+            categories +=
+              `Category ${c}: ` + item[c - 1].category[`category_${i}`];
+            categories += "</br>";
+          }
+          accordionGamesListBody.appendChild(gamesListInnerText);
+          document.getElementById(`gamesListInnerText_${i}`).innerHTML =
+            categories;
+          categories = "";
         }
-        accordionGamesListBody.appendChild(gamesListInnerText);
-        document.getElementById(`gamesListInnerText_${i}`).innerHTML =
-          categories;
-        categories = "";
       }
     }
   }
+  // fillAvailableGamesList();
+  // Pull category names from round arrays
 }
-// fillAvailableGamesList();
-// Pull category names from round arrays
 
-// --------------------------------------------- Game Functionality ---------------------------------------------
+//! --------------------------------------------- Game Functionality ---------------------------------------------
 
 if (round === "round1") {
   // console.log(roundOneArray);
@@ -1052,44 +1203,55 @@ activeStudentsList?.addEventListener("click", fetchStudentList);
 //!--------------------------------------------- Title Screen Function ------------------------------------------
 
 function titleScreen() {
-  playBtn?.addEventListener("click", saveName);
-  const welcomeText = "Sign In / Create Account";
-  if (playBtn) {
-    playBtn.innerText = welcomeText;
-  }
-  function saveName() {
-    localStorage.clear();
-    let player1Name = inputFieldForP1Name.value;
-    let player2Name = inputFieldForP2Name.value;
+  teacherSignInBtn.addEventListener("click", function signInTeacher() {
+    window.location.href = `${PREFIX}${PORT}/admin_login.html`;
+  });
+  studentRegistrationBtn.addEventListener("click", function signInStudent() {
+    window.location.href = `${PREFIX}${PORT}/student_registration.html`;
+  });
 
-    if (player1Name === "" && player2Name !== "") {
-      console.log("player1Name: ", player1Name);
-      localStorage.setItem("playerTwoName", player2Name);
-      window.location.href = `${PREFIX}${PORT}${EDITPATH}`;
-    }
+  // playBtn?.addEventListener("click", saveName);
+  // const welcomeText = "Sign In / Create Account";
+  // if (playBtn) {
+  //   playBtn.innerText = welcomeText;
+  // }
+  // function saveName() {
+  //   localStorage.clear();
+  //   let player1Name = inputFieldForP1Name.value;
+  //   let player2Name = inputFieldForP2Name.value;
 
-    if (player2Name === "" && player1Name !== "") {
-      console.log("player2Name: ", player2Name);
-      localStorage.setItem("playerOneName", player1Name);
-      window.location.href = `${PREFIX}${PORT}${ROUND1PATH}`;
-    }
-    if (player1Name === "" && player2Name === "") {
-      playBtn.innerText = "Please Enter Your Name...";
-      setTimeout(() => {
-        playBtn.innerText = welcomeText;
-      }, 2000);
-      playBtn.innerText;
-    }
-    if (player1Name !== "" && player2Name !== "") {
-      playBtn.innerText = "Only Enter One Name";
-      setTimeout(() => {
-        playBtn.innerText = welcomeText;
-      }, 2000);
-    }
-    inputFieldForP1Name.value = "";
-    inputFieldForP2Name.value = "";
-    //! Add fetch to backend
-  }
+  //   if (player1Name === "" && player2Name !== "") {
+  //     console.log("player1Name: ", player1Name);
+  //     localStorage.setItem("playerTwoName", player2Name);
+
+  //     //! change for multiplayer
+  //     window.location.href = `${PREFIX}${PORT}${EDITPATH}`;
+  //   }
+
+  //   if (player2Name === "" && player1Name !== "") {
+  //     console.log("player2Name: ", player2Name);
+  //     localStorage.setItem("playerOneName", player1Name);
+
+  //     //! change for multiplayer
+  //     window.location.href = `${PREFIX}${PORT}${ROUND1PATH}`;
+  //   }
+  //   if (player1Name === "" && player2Name === "") {
+  //     playBtn.innerText = "Please Enter Your Name...";
+  //     setTimeout(() => {
+  //       playBtn.innerText = welcomeText;
+  //     }, 2000);
+  //     playBtn.innerText;
+  //   }
+  //   if (player1Name !== "" && player2Name !== "") {
+  //     playBtn.innerText = "Only Enter One Name";
+  //     setTimeout(() => {
+  //       playBtn.innerText = welcomeText;
+  //     }, 2000);
+  //   }
+  //   inputFieldForP1Name.value = "";
+  //   inputFieldForP2Name.value = "";
+  //   //! Add fetch to backend
+  // }
 }
 
 //!----------------------------------------------- Button Enable/Disable ----------------------------------------

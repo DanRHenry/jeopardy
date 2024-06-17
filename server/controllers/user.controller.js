@@ -1,4 +1,4 @@
-// freecodecamp has this as /api/users.js
+// freecodecamp has this as /api/users.js1
 
 const router = require("express").Router();
 const User = require("../models/user.model");
@@ -11,24 +11,21 @@ const serverError = (res, error) => {
   });
 };
 
+//! Had to switch from bcrypt to bcryptjs to work on linux
 /* 
-  Require in the bcrypt dependency by storing it in a variable.
-  Bcrypt will be included in our controller --> add bcrypt in any file where we want encryption to take place.
+  Require in the bcryptjs dependency by storing it in a variable.
+  Bcryptjs will be included in our controller --> add bcryptjs in any file where we want encryption to take place.
 */
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 // Require in the jsonwebtoken dependency
 const jwt = require("jsonwebtoken");
 // Create a variable to hold the secret from our .env for the token
 const SECRET = process.env.JWT;
 
 router.post("/signup", async (req, res) => {
-  // res.header("Access-Control-Allow-Origin", "*");
-  // res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
   try {
-    // Creating a new object based off the Model Schema.
     const user = new User({
-      firstName: "",
-      lastName: "",
+      displayName: "",
       email: req.body.email,
       password: bcrypt.hashSync(req.body.password, 13),
       role: req.body.role,
@@ -69,8 +66,8 @@ router.post("/login", async (req, res) => {
   console.log("connected to login")
   console.log('req.body',req.body)
   try {
-    const { email, password } = req.body;
-    console.log("email and password from req.body:",email, password)
+    const { displayName, email, password, role, course } = req.body;
+    console.log("displayName:",displayName,"email:",email, "password:",password, "role:", role, "course:",course)
     const user = await User.findOne({ email: email });
     console.log("user:",user)
     if (!user) throw new Error("Email or password does not match.");
@@ -118,6 +115,29 @@ router.get("/find", requireValidation, async (req, res) => {
       serverError(res, err);
     }
 })
+
+router.post("/findAdmin", async (req, res) => {
+        try {
+      const { email, password } = req.body;
+          const admin = await User.findOne({email: email})
+
+      if (!admin) throw new Error("Administrator Not Found")
+
+        const passwordMatch = await bcrypt.compare(password, admin.password);
+
+        if (!passwordMatch) throw new Error("Wrong Password");
+
+        const token = jwt.sign({id: admin._id}, SECRET, {expiresIn: "3 days"});
+
+        return res.status(200).json({
+          message: "Login Successful",
+          admin,
+          token,
+        });
+      } catch (err) {
+        serverError(res, err);
+      }
+    });
 
 /* 
 ----------------------------- Update Account Endpoint ------------------------
