@@ -17,9 +17,9 @@ const GameplaySchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    userName: {
+    userEmail: {
         type: String,
-        required: false
+        required: true
     },
     className: {
         type: String,

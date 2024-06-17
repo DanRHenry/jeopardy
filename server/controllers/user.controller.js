@@ -25,7 +25,7 @@ const SECRET = process.env.JWT;
 router.post("/signup", async (req, res) => {
   try {
     const user = new User({
-      displayName: "",
+      displayName: req.body.displayName,
       email: req.body.email,
       password: bcrypt.hashSync(req.body.password, 13),
       role: req.body.role,

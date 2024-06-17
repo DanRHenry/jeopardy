@@ -60,7 +60,7 @@ const updateToken = (newToken) => {
 
 //! Teacher Sign-in Page
 if (document.title === "Teacher Login") {
-  let userNameInput = document.getElementById("nameField");
+  let displayNameInput = document.getElementById("nameField");
   let passwordInput = document.getElementById("passwordField");
   let emailInput = document.getElementById("emailField");
 
@@ -71,87 +71,95 @@ if (document.title === "Teacher Login") {
   );
 
   signinOrCreateAccountBtn.addEventListener("click", () => {
-    let adminLoginHeader = document.getElementById("adminLoginHeader")
+    let adminLoginHeader = document.getElementById("adminLoginHeader");
     if (adminLoginHeader.innerText == "Log In") {
-      adminLoginHeader.innerText = "Create New Account"
-      signinOrCreateAccountBtn.innerText = "Log In"
-    }
-    else if (adminLoginHeader.innerText == "Create New Account") {
-      adminLoginHeader.innerText = "Log In"
-      signinOrCreateAccountBtn.innerText = "Create New Account"
+      adminLoginHeader.innerText = "Create New Account";
+      signinOrCreateAccountBtn.innerText = "Log In";
+    } else if (adminLoginHeader.innerText == "Create New Account") {
+      adminLoginHeader.innerText = "Log In";
+      signinOrCreateAccountBtn.innerText = "Create New Account";
     }
   });
 
   const handleSubmit = async () => {
     if (document.getElementById("adminLoginHeader").textContent === "Log In") {
-    const url = `${apiServer}/user/findAdmin`;
-    let signInSignUpObject = JSON.stringify({
-      userName: userNameInput.value,
-      email: emailInput.value,
-      password: passwordInput.value,
-    });
-    // Try/catch = fetch w/request options within fetch
-    try {
-      // This is an alternative way of writing the fetch than we did before. It's more dense, but fewer lines.
-      const res = await fetch(url, {
-        method: "POST",
-        headers: new Headers({
-          "Content-Type": "application/json",
-        }),
-        body: signInSignUpObject, // The second body refers to the body object above.
-      });
-      const data = await res.json(); // The .json takes the promise and makes it usable
+      let email = emailInput.value;
+      email += "@eastlongmeadowma.gov";
 
-      // Pass the data token value to my updateToken
-      // If the server send a success message we can update token and route to room, if not we will get an alert
-      if (data.message === "Login Successful") {
-        updateToken(data.token);
-        console.log("logged in!")
-        window.location.href = `${PREFIX}${PORT}/edit-content.html`;
-        // navigate("/dashboard");
-      } else {
-        console.log("not found");
-        alert(data.message);
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  }
-  else if (document.getElementById("adminLoginHeader").textContent === "Create New Account") {
-    const url = `${apiServer}/user/signup`;
-    let signInSignUpObject = JSON.stringify({
-      userName: userNameInput.value,
-      email: emailInput.value,
-      password: passwordInput.value,
-      role: "teacher",
-      course: "",
-    });
-    // Try/catch = fetch w/request options within fetch
-    try {
-      // This is an alternative way of writing the fetch than we did before. It's more dense, but fewer lines.
-      const res = await fetch(url, {
-        method: "POST",
-        headers: new Headers({
-          "Content-Type": "application/json",
-        }),
-        body: signInSignUpObject, // The second body refers to the body object above.
+      const url = `${apiServer}/user/findAdmin`;
+      let signInSignUpObject = JSON.stringify({
+        displayName: displayNameInput.value,
+        email: email,
+        password: passwordInput.value,
       });
-      const data = await res.json(); // The .json takes the promise and makes it usable
+      // Try/catch = fetch w/request options within fetch
+      try {
+        // This is an alternative way of writing the fetch than we did before. It's more dense, but fewer lines.
+        const res = await fetch(url, {
+          method: "POST",
+          headers: new Headers({
+            "Content-Type": "application/json",
+          }),
+          body: signInSignUpObject, // The second body refers to the body object above.
+        });
+        const data = await res.json(); // The .json takes the promise and makes it usable
 
-      // Pass the data token value to my updateToken
-      // If the server send a success message we can update token and route to room, if not we will get an alert
-      if (data.message === "Success! User Created!") {
-        updateToken(data.token);
-        // navigate("/dashboard");
-        console.log("user created! Yay! Now move to the round one screen")
-      } else {
-        console.log("Oops, user not created...");
-        alert(data.message);
+        // Pass the data token value to my updateToken
+        // If the server send a success message we can update token and route to room, if not we will get an alert
+        if (data.message === "Login Successful") {
+          updateToken(data.token);
+          console.log("logged in!");
+          sessionStorage.setItem(
+            "email",
+            `${emailInput.value}@eastlongmeadowma.gov`
+          );
+          window.location.href = `${PREFIX}${PORT}/edit-content.html`;
+          // navigate("/dashboard");
+        } else {
+          console.log("not found");
+          alert(data.message);
+        }
+      } catch (err) {
+        console.error(err);
       }
-    } catch (err) {
-      console.error(err);
+    } else if (
+      document.getElementById("adminLoginHeader").textContent ===
+      "Create New Account"
+    ) {
+      const url = `${apiServer}/user/signup`;
+      let signInSignUpObject = JSON.stringify({
+        displayName: displayNameInput.value,
+        email: emailInput.value,
+        password: passwordInput.value,
+        role: "teacher",
+        course: "",
+      });
+      // Try/catch = fetch w/request options within fetch
+      try {
+        // This is an alternative way of writing the fetch than we did before. It's more dense, but fewer lines.
+        const res = await fetch(url, {
+          method: "POST",
+          headers: new Headers({
+            "Content-Type": "application/json",
+          }),
+          body: signInSignUpObject, // The second body refers to the body object above.
+        });
+        const data = await res.json(); // The .json takes the promise and makes it usable
+
+        // Pass the data token value to my updateToken
+        // If the server send a success message we can update token and route to room, if not we will get an alert
+        if (data.message === "Success! User Created!") {
+          updateToken(data.token);
+          // navigate("/dashboard");
+          console.log("user created! Yay! Now move to the round one screen");
+        } else {
+          console.log("Oops, user not created...");
+          alert(data.message);
+        }
+      } catch (err) {
+        console.error(err);
+      }
     }
-  }
   };
 
   //! Search for user/email
@@ -432,6 +440,7 @@ Then, fillAvailableGamesList() is run.
     customGameInformation.gameName = gameNameInput.value;
     customGameInformation.className =
       document.getElementById("class-names").value;
+    customGameInformation.userEmail = sessionStorage.email;
 
     // Todo: socket
     const url = `${apiServer}/gameplay/gameplayinformation/`;

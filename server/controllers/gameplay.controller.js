@@ -17,7 +17,7 @@ router.post("/gameplayinformation", async (req, res) => {
             answer: req.body.answer,
             category: req.body.category,
             gameName: req.body.gameName,
-            userName: req.body.userName,
+            userEmail: req.body.userEmail,
 	    className: req.body.className,
         })
 
