@@ -65,56 +65,69 @@ if (document.title === "Teacher Login") {
   let emailInput = document.getElementById("emailField");
 
   //! Sign In / Sign Up
-let signInSignUpObject = JSON.stringify({
-  userName: userNameInput.value,
-  email: emailInput.value,
-  password: passwordInput.value,
-});
 
+  const signinOrCreateAccountBtn = document.getElementById(
+    "signin-or-createaccount-btn"
+  );
 
-//! Search for user/email
-const findEmail = async () => {
-  //! Check for User
-let checkForUserObject = JSON.stringify({
-  // email: emailInput.value,
-  email: "bla@bla.com"
-});
+  signinOrCreateAccountBtn.addEventListener("click", () => {
+    let adminLoginHeader = document.getElementById("adminLoginHeader")
+    if (adminLoginHeader.innerText == "Log In") {
+      adminLoginHeader.innerText = "Create New Account"
+      signinOrCreateAccountBtn.innerText = "Log In"
+    }
+    else if (adminLoginHeader.innerText == "Create New Account") {
+      adminLoginHeader.innerText = "Log In"
+      signinOrCreateAccountBtn.innerText = "Create New Account"
+    }
+  });
 
-console.log("checkForUserObject",checkForUserObject)
-  let url = `${apiServer}/admin/findAdmin`;
+  const handleSubmit = async () => {
+    if (document.getElementById("adminLoginHeader").textContent === "Log In") {
+    const url = `${apiServer}/user/findAdmin`;
+    let signInSignUpObject = JSON.stringify({
+      userName: userNameInput.value,
+      email: emailInput.value,
+      password: passwordInput.value,
+    });
+    // Try/catch = fetch w/request options within fetch
+    try {
+      // This is an alternative way of writing the fetch than we did before. It's more dense, but fewer lines.
+      const res = await fetch(url, {
+        method: "POST",
+        headers: new Headers({
+          "Content-Type": "application/json",
+        }),
+        body: signInSignUpObject, // The second body refers to the body object above.
+      });
+      const data = await res.json(); // The .json takes the promise and makes it usable
 
-  const reqOptions = {
-    // method: "POST",
-    method: "GET",
-    headers: new Headers({
-      // Authorization: token,
-    }),
-    body: checkForUserObject,
+      // Pass the data token value to my updateToken
+      // If the server send a success message we can update token and route to room, if not we will get an alert
+      if (data.message === "Login successful!") {
+        updateToken(data.token);
+        navigate("/dashboard");
+      } else {
+        console.log("not found");
+        alert(data.message);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
+  else if (document.getElementById("adminLoginHeader").textContent === "Create New Account") {
+
+  }
   };
 
-
-  try {
-    const {email} = reqOptions.body
-    console.log("reqOptions",email)
-
-    const res = await fetch(url, reqOptions);
-    const data = await res.json();
-    // console.log("data:", data);
-    // If the server does not provide a failure message
-    if (data.message === "Found!") {
-      updateName(data.findUser.email);
-    }
-  } catch (err) {
-    console.log("not found");
-    console.error(err);
-  }
-};
+  //! Search for user/email
 
   document
     .getElementById("submit")
     .addEventListener("click", async function submitAdmin(e) {
       e.preventDefault();
-      await findEmail()
+
+      await handleSubmit();
       // Search the database for the administrator name/email
       // let foundName = await fetch(`${apiServer}/find`);
       //
@@ -126,25 +139,10 @@ console.log("checkForUserObject",checkForUserObject)
       // let data = result.json();
       // console.log("data:", data);
     });
-
-  //! requestOptions
-
-  const headers = new Headers();
-
-  headers.append("Content-Type", "application/json");
-
-  const requestOptions = {
-    headers,
-    body: signInSignUpObject,
-    method: "POST",
-  };
-
-  // let body = json.stringify({
-  //   userName:
-  //   email:
-  //   password:
-  // })
 }
+
+//! Teacher Sign-up Page
+
 //! Student Registration Page
 
 //! Game Page

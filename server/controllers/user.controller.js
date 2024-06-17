@@ -120,29 +120,28 @@ router.get("/find", requireValidation, async (req, res) => {
     }
 })
 
-router.get("/findAdmin", async (req, res) => {
-  // res.header("Access-Control-Allow-Origin", "*");
-  // res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-  console.log("req:",req.body)
-      try {
-      // const id = req.user._id;
-      // const email = req.user.email;
+router.post("/findAdmin", async (req, res) => {
+        try {
+      const { email, password } = req.body;
+          const admin = await User.findOne({email: email})
 
-      // const findUser = await User.findOne({ _id: id });
-      const findEmail = await User.findOne({ email: email });
+      if (!admin) throw new Error("Administrator Not Found")
 
-      findEmail
-        ? res.status(200).json({
-            message: "Found!",
-            findEmail,
-          })
-        : res.status(404).json({
-            message: `No Users Found.`,
-          });
-    } catch (err) {
-      serverError(res, err);
-    }
-})
+        const passwordMatch = await bcrypt.compare(password, admin.password);
+
+        if (!passwordMatch) throw new Error("Wrong Password");
+
+        const token = jwt.sign({id: admin._id}, SECRET, {expiresIn: "3 days"});
+
+        return res.status(200).json({
+          message: "Login Successful",
+          admin,
+          token,
+        });
+      } catch (err) {
+        serverError(res, err);
+      }
+    });
 
 /* 
 ----------------------------- Update Account Endpoint ------------------------
