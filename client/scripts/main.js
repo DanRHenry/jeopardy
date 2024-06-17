@@ -53,9 +53,9 @@ returnHome?.addEventListener("click", function returnHome() {
 
 //! Update Token Function
 const updateToken = (newToken) => {
-  localStorage.setItem("token", newToken);
+  sessionStorage.setItem("token", newToken);
   // ^ .setItem(key, value)
-  setSessionToken(newToken);
+  // setSessionToken(newToken);
 };
 
 //! Teacher Sign-in Page
@@ -104,9 +104,11 @@ if (document.title === "Teacher Login") {
 
       // Pass the data token value to my updateToken
       // If the server send a success message we can update token and route to room, if not we will get an alert
-      if (data.message === "Login successful!") {
+      if (data.message === "Login Successful") {
         updateToken(data.token);
-        navigate("/dashboard");
+        console.log("logged in!")
+        window.location.href = `${PREFIX}${PORT}/edit-content.html`;
+        // navigate("/dashboard");
       } else {
         console.log("not found");
         alert(data.message);
@@ -116,7 +118,39 @@ if (document.title === "Teacher Login") {
     }
   }
   else if (document.getElementById("adminLoginHeader").textContent === "Create New Account") {
+    const url = `${apiServer}/user/signup`;
+    let signInSignUpObject = JSON.stringify({
+      userName: userNameInput.value,
+      email: emailInput.value,
+      password: passwordInput.value,
+      role: "teacher",
+      course: "",
+    });
+    // Try/catch = fetch w/request options within fetch
+    try {
+      // This is an alternative way of writing the fetch than we did before. It's more dense, but fewer lines.
+      const res = await fetch(url, {
+        method: "POST",
+        headers: new Headers({
+          "Content-Type": "application/json",
+        }),
+        body: signInSignUpObject, // The second body refers to the body object above.
+      });
+      const data = await res.json(); // The .json takes the promise and makes it usable
 
+      // Pass the data token value to my updateToken
+      // If the server send a success message we can update token and route to room, if not we will get an alert
+      if (data.message === "Success! User Created!") {
+        updateToken(data.token);
+        // navigate("/dashboard");
+        console.log("user created! Yay! Now move to the round one screen")
+      } else {
+        console.log("Oops, user not created...");
+        alert(data.message);
+      }
+    } catch (err) {
+      console.error(err);
+    }
   }
   };
 

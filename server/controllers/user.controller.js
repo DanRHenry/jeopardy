@@ -23,13 +23,9 @@ const jwt = require("jsonwebtoken");
 const SECRET = process.env.JWT;
 
 router.post("/signup", async (req, res) => {
-  // res.header("Access-Control-Allow-Origin", "*");
-  // res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
   try {
-    // Creating a new object based off the Model Schema.
     const user = new User({
-      firstName: "",
-      lastName: "",
+      displayName: "",
       email: req.body.email,
       password: bcrypt.hashSync(req.body.password, 13),
       role: req.body.role,
@@ -70,8 +66,8 @@ router.post("/login", async (req, res) => {
   console.log("connected to login")
   console.log('req.body',req.body)
   try {
-    const { email, password } = req.body;
-    console.log("email and password from req.body:",email, password)
+    const { displayName, email, password, role, course } = req.body;
+    console.log("displayName:",displayName,"email:",email, "password:",password, "role:", role, "course:",course)
     const user = await User.findOne({ email: email });
     console.log("user:",user)
     if (!user) throw new Error("Email or password does not match.");
