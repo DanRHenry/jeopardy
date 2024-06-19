@@ -36,6 +36,16 @@ const sendMesage = () => {
   socket.send("Hello???");
 };
 
+const messages = document.getElementById("messages")
+
+const wsOpen = document.getElementById("ws-open")
+const wsClose = document.getElementById("ws-close")
+const wsSend = document.getElementById("ws-send")
+const wsInput = document.getElementById("ws-input")
+
+const showMessage = (message) => {
+  messages?.textContent += `\n${message}`
+}
 // import { readFileSync } from "fs";
 
 //! Title Page
