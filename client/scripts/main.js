@@ -25,16 +25,27 @@ socket.addEventListener("open", function (event) {
   socket.send("Hello Server!");
 });
 
-//TODO Fix looping
 // Listen for Messages:
-// socket.addEventListener("message", function (event) {
-//   console.log("message incoming:", event.data);
-//   socket.send("Hello???");
-// });
-
-const sendMesage = () => {
+socket.addEventListener("message", function (event) {
+  console.log("message incoming:", event.data);
   socket.send("Hello???");
-};
+});
+
+let category = ""
+let className = ""
+let gameName = ""
+let question = ""
+let answer = ""
+const gamePlayObject = {"category": category, "className": className, "gameName": gameName, "question": question, "answer": answer}
+
+// socket.addEventListener("game")
+function broadcastGameInformation(category, className, gameName, question, answer) {
+
+  socket.send('gameInformation', function() {
+    socket.send(JSON.stringify(gamePlayObject))
+  })
+
+}
 
 // import { readFileSync } from "fs";
 
@@ -83,13 +94,13 @@ if (document.title === "Teacher Login") {
 
   const handleSubmit = async () => {
     if (document.getElementById("adminLoginHeader").textContent === "Log In") {
-      let email = emailInput.value;
-      email += "@eastlongmeadowma.gov";
 
+      let email = emailInput.value;
+    sessionStorage.setItem("email",`${email}@eastlongmeadowma.gov`);
       const url = `${apiServer}/user/findAdmin`;
       let signInSignUpObject = JSON.stringify({
         displayName: displayNameInput.value,
-        email: email,
+        email: sessionStorage.email,
         password: passwordInput.value,
       });
       // Try/catch = fetch w/request options within fetch
@@ -109,10 +120,11 @@ if (document.title === "Teacher Login") {
         if (data.message === "Login Successful") {
           updateToken(data.token);
           console.log("logged in!");
-          sessionStorage.setItem(
-            "email",
-            `${emailInput.value}@eastlongmeadowma.gov`
-          );
+          // console.log("emailInput.value:",emailInput.value)
+          // sessionStorage.setItem(
+          //   "email",
+          //   `${emailInput.value}@eastlongmeadowma.gov`
+          // );
           window.location.href = `${PREFIX}${PORT}/edit-content.html`;
           // navigate("/dashboard");
         } else {
@@ -129,7 +141,7 @@ if (document.title === "Teacher Login") {
       const url = `${apiServer}/user/signup`;
       let signInSignUpObject = JSON.stringify({
         displayName: displayNameInput.value,
-        email: emailInput.value,
+        email: `${emailInput.value}@eastlongmeadowma.gov`,
         password: passwordInput.value,
         role: "teacher",
         course: "",
@@ -273,6 +285,7 @@ for (let m = 0; roundTwoArray.length < 36; m++) {
     }
   }
 }
+
 finalJeopardyCategory.push(placeholderQuestions[60]);
 
 // -------------------------------------------- Set the round value ------------------------------------------------------
@@ -394,6 +407,7 @@ if (document.title === "Editor") {
     newClass.answer = answerInputField.value;
     newClass.category = categoryInputField.value;
     newClass.unit = unitNameInputField.value;
+    newClass.userEmail = sessionStorage.email;
 
     classNameInputField.value = "";
     questionInputField.value = "";
@@ -415,17 +429,6 @@ if (document.title === "Editor") {
     // console.log("newClass should be posted")
     await fillClassListArray();
   };
-
-  // ----------------------- Use customGameInformation to make API Call to post a New Game Setup --------------------------
-  /* 
-Check the new game name field to make sure one has been entered. 
-If all is well, this sends the customGameInformation global object to the API. 
-Then, fillAvailableGamesList() is run.
-
-
-
-*/
-  // ------------------------------------- contains fillAvailableGamesList() ----------------------------------------------
 
   const postGameplayInformation = async () => {
     const gameNameInput = document.getElementById("gameNameField");
@@ -1042,6 +1045,7 @@ This function creates the global categoriesObject, which is used to fill questio
           );
           console.log("sessionStorage:", sessionStorage);
         });
+        
         accordionHeader.appendChild(gameSelector);
 
         const collapseGamei = document.createElement("div");
@@ -1140,72 +1144,6 @@ passBtn?.addEventListener("click", function listener() {
 activeStudentsList?.addEventListener("click", fetchStudentList);
 
 //-------------------------------------------------- Functions ------------------------------------------------
-// //! Fetch answers from jeopardy api
-// let fetchAnswers = async () => {
-//   const url = "https://jservice.io/api/clues?count=100";
-//   let randomURL = "https://jservice.io/api/random?count=100";
-//   let categoryURL = "https://jservice.io/api/category?id=";
-//   for (let i = 0; i < 6 - randomResultArray.length; i++) {
-//     let res = await fetch(categoryURL + (i + 1)); // Passing our file location
-//     let result = await res.json();
-//     // let data = result.data;
-//     let data = result;
-//     console.log("result:", result);
-//     questionArray.push(data);
-//   }
-// };
-
-// let r = "\r\""
-// console.log("r:",r)
-// Fetch Questions and Answers from danhenrydev jeopardy api
-
-// ------------------------------------------------------- Fetch on Click -------------------------------------------------
-
-// const url = `${apiServer}/questions`;
-// const fetchQuestions = async function () {
-//   console.log("fetching questions...");
-//   let response = await fetch(`${url}/questions`);
-//   let data = await response.json();
-//   console.log("data:", data);
-// };
-
-// const testFetchButton = document.getElementById("testFetchButton");
-// testFetchButton?.addEventListener("click", fetchQuestions);
-
-//! Commented Out Fetching from API for now.
-// Fetch Information For the Answer Board
-// let fetchRandomCategories = async () => {
-//   let res = await fetch(randomURL); // Passing our file location
-//   let result = await res.json();
-//   // let data = result.data;
-//   data = result;
-//   for (let i = 0; i < 6; i++ && randomResultArray.length < 6) {
-//     if (data[i].category.clues_count > 6 && randomResultArray < 6) {
-//       randomResultArray.push(data[i].category_id);
-//     } else {
-//       fetchRandomCategories();
-//     }
-//   }
-// console.log("In Async/await", data)
-// console.log(randomResultArray);
-// fetchAnswers();
-// };
-
-// fetchRandomCategories()
-
-// console.log("questionArray:", questionArray);
-
-//?
-
-//?
-// let fetchCategories = async () => {
-//     url1 = `https://jservice.io/api/category?id=${data[0].id}`
-//     let res = await fetch(url1);
-//     let result = await res.json();
-//     category = result;
-//     console.log("categoryresult",category)
-// }
-//?
 
 // Get Player Names on the Title Screen and Set to Local Storage
 
@@ -1593,6 +1531,9 @@ async function roundOne() {
 */
 
     let { category, className, gameName, question, answer } = sessionStorage;
+    broadcastGameInformation(category, className, gameName, question, answer);
+    sessionStorage.question = "";
+    sessionStorage.answer = "";
     question = JSON.parse(question);
     answer = JSON.parse(answer);
     category = JSON.parse(category);
