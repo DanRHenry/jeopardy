@@ -21,6 +21,10 @@ const QuestionsSchema = new mongoose.Schema({
         type: Object,
         required: true,
     },
+    userEmail: {
+        type: String,
+        required: true,
+    }
 });
 
 module.exports = mongoose.model("Questions", QuestionsSchema);
