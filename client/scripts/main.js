@@ -1,4 +1,10 @@
 import placeholderQuestions from "./placeholder-questions.js";
+console.log(sessionStorage.gameName)
+if (sessionStorage.gameName?.length > 0) {
+  // sessionStorage.currentGame = ""
+}
+console.log(sessionStorage)
+
 // Global DOM Variables
 
 // Gameplay API
@@ -14,45 +20,76 @@ const PORT = 8080;
 const EDITPATH = "/edit-content.html";
 const ROUND1PATH = "/round-1.html";
 
-// const ROUND1PATH = "/client/round-1.html";
+// wsOpen.addEventListener("click", () => {
+// closeConnection();
+// console.log("open clicked")
+const ws = new WebSocket(`ws://localhost:${PORT}`);
 
+ws.addEventListener("error", () => {
+  // showMessage("Websocket error");
+  alert("Websocket Error")
+});
+
+ws.addEventListener("open", () => {
+  showMessage("Websocket connection established");
+});
+
+ws.addEventListener("close", () => {
+  alert("socket closed")
+  // showMessage("Websocket connection closed");
+});
+
+
+// });
+
+// wsClose.addEventListener("click", closeConnection);
+
+
+/* 
 // Create WebSocket connection:
-// const socket = new WebSocket("ws://localhost:3000");
-const socket = new WebSocket(`ws://127.0.0.1:${serverPort}`);
+const ws = new WebSocket(`ws://127.0.0.1:${serverPort}`);
 
 // Connection Opened:
-socket.addEventListener("open", function (event) {
-  socket.send("Hello Server!");
+wsInput.addEventListener("open", function (event) {
+
+  // Listen for Messages:
+  ws.addEventListener("message", function (event) {
+    console.log("message incoming:", event.data);
+  });
+
+  let category = "";
+  let className = "";
+  let gameName = "";
+  let question = "";
+  let answer = "";
+  const gamePlayObject = {
+    category: category,
+    className: className,
+    gameName: gameName,
+    question: question,
+    answer: answer,
+  };
+
+  // socket.addEventListener("game")
+  function broadcastGameInformation(
+    category,
+    className,
+    gameName,
+    question,
+    answer
+  ) {
+    if (!ws) {
+      showMessage("No Websocket Connection");
+      return;
+    }
+    ws.send("gameInformation", function () {
+      ws.send(JSON.stringify(gamePlayObject));
+    });
+  }
 });
-
-// Listen for Messages:
-socket.addEventListener("message", function (event) {
-  console.log("message incoming:", event.data);
-  socket.send("Hello???");
-});
-
-let category = ""
-let className = ""
-let gameName = ""
-let question = ""
-let answer = ""
-const gamePlayObject = {"category": category, "className": className, "gameName": gameName, "question": question, "answer": answer}
-
-// socket.addEventListener("game")
-function broadcastGameInformation(category, className, gameName, question, answer) {
-
-  socket.send('gameInformation', function() {
-    socket.send(JSON.stringify(gamePlayObject))
-  })
-
-}
-
-// import { readFileSync } from "fs";
+*/
 
 //! Title Page
-// let inputFieldForP1Name = document.getElementById("inputFieldForP1Name");
-// let inputFieldForP2Name = document.getElementById("inputFieldForP2Name");
-// let playBtn = document.getElementById("startGame");
 const teacherSignInBtn = document.getElementById("teacherSignIn");
 const studentRegistrationBtn = document.getElementById("studentRegistration");
 
@@ -65,8 +102,6 @@ returnHome?.addEventListener("click", function returnHome() {
 //! Update Token Function
 const updateToken = (newToken) => {
   sessionStorage.setItem("token", newToken);
-  // ^ .setItem(key, value)
-  // setSessionToken(newToken);
 };
 
 //! Teacher Sign-in Page
@@ -94,18 +129,16 @@ if (document.title === "Teacher Login") {
 
   const handleSubmit = async () => {
     if (document.getElementById("adminLoginHeader").textContent === "Log In") {
-
       let email = emailInput.value;
-    sessionStorage.setItem("email",`${email}@eastlongmeadowma.gov`);
+      sessionStorage.setItem("email", `${email}@eastlongmeadowma.gov`);
       const url = `${apiServer}/user/findAdmin`;
       let signInSignUpObject = JSON.stringify({
         displayName: displayNameInput.value,
         email: sessionStorage.email,
         password: passwordInput.value,
       });
-      // Try/catch = fetch w/request options within fetch
+
       try {
-        // This is an alternative way of writing the fetch than we did before. It's more dense, but fewer lines.
         const res = await fetch(url, {
           method: "POST",
           headers: new Headers({
@@ -115,21 +148,11 @@ if (document.title === "Teacher Login") {
         });
         const data = await res.json(); // The .json takes the promise and makes it usable
 
-        // Pass the data token value to my updateToken
-        // If the server send a success message we can update token and route to room, if not we will get an alert
         if (data.message === "Login Successful") {
           updateToken(data.token);
-          console.log("logged in!");
-          // console.log("emailInput.value:",emailInput.value)
-          // sessionStorage.setItem(
-          //   "email",
-          //   `${emailInput.value}@eastlongmeadowma.gov`
-          // );
           window.location.href = `${PREFIX}${PORT}/edit-content.html`;
-          // navigate("/dashboard");
         } else {
-          console.log("not found");
-          alert(data.message);
+          alert("Not Found");
         }
       } catch (err) {
         console.error(err);
@@ -146,9 +169,7 @@ if (document.title === "Teacher Login") {
         role: "teacher",
         course: "",
       });
-      // Try/catch = fetch w/request options within fetch
       try {
-        // This is an alternative way of writing the fetch than we did before. It's more dense, but fewer lines.
         const res = await fetch(url, {
           method: "POST",
           headers: new Headers({
@@ -157,12 +178,8 @@ if (document.title === "Teacher Login") {
           body: signInSignUpObject, // The second body refers to the body object above.
         });
         const data = await res.json(); // The .json takes the promise and makes it usable
-
-        // Pass the data token value to my updateToken
-        // If the server send a success message we can update token and route to room, if not we will get an alert
         if (data.message === "Success! User Created!") {
           updateToken(data.token);
-          // navigate("/dashboard");
           console.log("user created! Yay! Now move to the round one screen");
         } else {
           console.log("Oops, user not created...");
@@ -182,16 +199,9 @@ if (document.title === "Teacher Login") {
       e.preventDefault();
 
       await handleSubmit();
-      // Search the database for the administrator name/email
-      // let foundName = await fetch(`${apiServer}/find`);
-      //
       userNameInput.value = "";
       passwordInput.value = "";
       emailInput.value = "";
-
-      // let result = await fetch(`${apiServer}/admin`);
-      // let data = result.json();
-      // console.log("data:", data);
     });
 }
 
@@ -256,9 +266,6 @@ let roundTwoArray = [];
 let finalJeopardyCategory = [];
 let classList = [];
 let results = [];
-// const gameplayAnswers = [];
-// const gameplayCategories = [];
-// const gameplayQuestions = [];
 
 // -------------------------------------------------- Global Objects ------------------------------------------------------------
 let categoriesObject = {};
@@ -351,10 +358,6 @@ if (document.title === "Editor") {
       }
     }
   }
-
-  // --------------------------------------------------- API Calls ----------------------------------------------------------
-
-  // ----------------------------------------------------- POST -------------------------------------------------------------
 
   // --------------- Post a new Class Name and fetch the information again to populate the class List ------------------------------
 
@@ -468,13 +471,6 @@ if (document.title === "Editor") {
 
       .addEventListener("click", postNewClassName);
   }
-  // ----------------------------------------------------- GET -------------------------------------------------------------
-  // ---------------------------------- Fetch Questions, Answers, Categories, and Class Names ------------------------------
-  /* 
-
-This function creates the global categoriesObject, which is used to fill questions, answers, classes, and categories for the fillClasslistArray function
-
-*/
 
   //! The categories object being fetched isn't complete
 
@@ -502,12 +498,8 @@ This function creates the global categoriesObject, which is used to fill questio
 
   //Todo - delete gameNameInput when the number of checked boxes goes below 6
 
-  // ------------------------------------------------- Edit Page Sequence ---------------------------------------------------
-  // ---------------------------------------- Run the Functions in the Correct Order ----------------------------------------
-  // First, get the information from the api
   await fetchInformation();
 
-  // Fill the classList array for
   fillClassListArray();
 
   fillClassListDropdown();
@@ -515,6 +507,9 @@ This function creates the global categoriesObject, which is used to fill questio
   fillCategoryOptionsDropdown();
 
   fillAvailableGamesList();
+
+  //Todo -- eventually, put this in the socket message event listener
+  fillAvailableStudentsList();
 
   // -------------------------------------- Fill the customContent array --------------------------------------------------
 
@@ -712,7 +707,7 @@ This function creates the global categoriesObject, which is used to fill questio
         element.innerText = classList[i].className;
         element.id = classList[i].id;
         element.innerText = categoriesObject.getAllQuestions[i].question;
-        // document.getElementById("questionList").innerHTML = categoriesObject.getAllQuestions[i].question;
+
         for (let i = 0; i < results.length; i++) {
           document.getElementById("questionList").innerHTML = resultsHTML;
         }
@@ -840,8 +835,6 @@ This function creates the global categoriesObject, which is used to fill questio
     customGameInformation.category = customCategories;
   }
 
-  // fillClassListDropdown();
-
   //todo ------------------------ Event Listener to run fillCategoryOptionsDropdown() on change !I don't think this is working...
   document.getElementById("class-names")?.addEventListener("change", () => {
     fillCategoryOptionsDropdown();
@@ -931,23 +924,11 @@ This function creates the global categoriesObject, which is used to fill questio
     }
   }
 
-  // fillCategoryOptionsDropdown();
   // --------------------------------------------- Event Listener for the Questions List Button ----------------------------
 
   document
     .getElementById("questionsListBtn")
     ?.addEventListener("click", fillCategoryOptionsDropdown);
-
-  // for (let i = 0; i < 5; i++) {
-  //   for (let n = 0; n < 6; n++) {
-  //     customRoundOneArray.push(customContentArray[i + 6 * n]);
-  //   }
-  // }
-
-  // Now replace placeholder informatiom with the fetched information
-  // roundOneArray = customRoundOneArray;
-
-  // await fetchInformation();
 
   //! ----------------------------------------------- Fill Available Games List -------------------------------------------
 
@@ -997,7 +978,7 @@ This function creates the global categoriesObject, which is used to fill questio
       // console.log("availableGamesResults", availableGamesResults);
       for (let i = 0; i < availableGamesResults.length; i++) {
         const gamesListAccordionItem = document.createElement("div");
-        gamesListAccordionItem.className = "accordion-item accordionGamesItems";
+        gamesListAccordionItem.className = "accordion-item accordionGamesItems gamesListAccordionItem";
         availableGamesList.appendChild(gamesListAccordionItem);
 
         const accordionHeader = document.createElement("h2");
@@ -1027,8 +1008,10 @@ This function creates the global categoriesObject, which is used to fill questio
         const gameSelector = document.createElement("a");
         gameSelector.href = `${PREFIX}${PORT}${ROUND1PATH}`;
         gameSelector.innerText = "Start Game";
+        gameSelector.className = "start_game"
+
+//! ------- Start Game Event Listener (Sends the game information through the websockets) ----------
         gameSelector.addEventListener("click", () => {
-          console.log("Starting Game...", i);
           currentGame = availableGames.getAllGameplayInformation[i];
           // console.log(currentGame.question)
           // sessionStorage.clear()
@@ -1043,9 +1026,10 @@ This function creates the global categoriesObject, which is used to fill questio
             "category",
             JSON.stringify(currentGame.category)
           );
-          console.log("sessionStorage:", sessionStorage);
         });
-        
+
+        // availableGamesList.appendChild(gameSelector);
+        // gamesListAccordionButton.appendChild(gameSelector);
         accordionHeader.appendChild(gameSelector);
 
         const collapseGamei = document.createElement("div");
@@ -1088,8 +1072,33 @@ This function creates the global categoriesObject, which is used to fill questio
       }
     }
   }
-  // fillAvailableGamesList();
-  // Pull category names from round arrays
+
+  async function fillAvailableStudentsList() {
+    const studentList = [{"studentName": "Fred"}, {"studentName": "George"}]
+    const studentNamesItems = document.getElementById("studentNamesItems")
+    const students = document.getElementsByClassName("students")
+    studentList.forEach(student => {
+      console.log("students:",students)
+      // if (!students.includes(student.studentName)) { //todo change this to email
+      const entry = document.createElement("button");
+      // const entry = document.createElement("div");
+      entry.textContent = student.studentName;
+      entry.className = "students"
+      entry.addEventListener("click", () => {
+        if (entry.style.backgroundColor === "black") {
+          entry.style.backgroundColor = "white"
+          entry.style.color = "black"
+          // sessionStorage.studentList.entry.textContent() // todo finish changing the flag in session storage when clicked, so they may be removed from the game
+          return;
+        }
+        entry.style.backgroundColor = "black";
+        entry.style.color = "white"
+      })
+      studentNamesItems.append(entry);
+      // } 
+
+    })
+  }
 }
 
 //! --------------------------------------------- Game Functionality ---------------------------------------------
@@ -1103,6 +1112,7 @@ if (round === "round1") {
   document.getElementById("catr1-5").innerText = roundOneArray[24].category;
   document.getElementById("catr1-6").innerText = roundOneArray[30].category;
 }
+
 if (round === "round2") {
   document.getElementById("catr2-1").innerText = roundTwoArray[0].category;
   document.getElementById("catr2-2").innerText = roundTwoArray[1].category;
@@ -1115,8 +1125,7 @@ if (round === "round2") {
 if (round === "final") {
 }
 
-function clearInputs(e) {
-  e.preventDefault();
+function clearInputs() {
   document.getElementById("classNameInputField").value = "";
   document.getElementById("unitNameInputField").value = "";
   document.getElementById("categoryInputField").value = "";
@@ -1156,49 +1165,6 @@ function titleScreen() {
   studentRegistrationBtn.addEventListener("click", function signInStudent() {
     window.location.href = `${PREFIX}${PORT}/student_registration.html`;
   });
-
-  // playBtn?.addEventListener("click", saveName);
-  // const welcomeText = "Sign In / Create Account";
-  // if (playBtn) {
-  //   playBtn.innerText = welcomeText;
-  // }
-  // function saveName() {
-  //   localStorage.clear();
-  //   let player1Name = inputFieldForP1Name.value;
-  //   let player2Name = inputFieldForP2Name.value;
-
-  //   if (player1Name === "" && player2Name !== "") {
-  //     console.log("player1Name: ", player1Name);
-  //     localStorage.setItem("playerTwoName", player2Name);
-
-  //     //! change for multiplayer
-  //     window.location.href = `${PREFIX}${PORT}${EDITPATH}`;
-  //   }
-
-  //   if (player2Name === "" && player1Name !== "") {
-  //     console.log("player2Name: ", player2Name);
-  //     localStorage.setItem("playerOneName", player1Name);
-
-  //     //! change for multiplayer
-  //     window.location.href = `${PREFIX}${PORT}${ROUND1PATH}`;
-  //   }
-  //   if (player1Name === "" && player2Name === "") {
-  //     playBtn.innerText = "Please Enter Your Name...";
-  //     setTimeout(() => {
-  //       playBtn.innerText = welcomeText;
-  //     }, 2000);
-  //     playBtn.innerText;
-  //   }
-  //   if (player1Name !== "" && player2Name !== "") {
-  //     playBtn.innerText = "Only Enter One Name";
-  //     setTimeout(() => {
-  //       playBtn.innerText = welcomeText;
-  //     }, 2000);
-  //   }
-  //   inputFieldForP1Name.value = "";
-  //   inputFieldForP2Name.value = "";
-  //   //! Add fetch to backend
-  // }
 }
 
 //!----------------------------------------------- Button Enable/Disable ----------------------------------------
@@ -1230,10 +1196,9 @@ function enableNextRound() {
 }
 
 //!------------------------------------------ Scoreboard and Name Functionality ------------------------------------
-// Check Local Storage and Populate Scoreboard and Names
+
+// Todo -- Change this to deal with multiple players coming from the socket --
 function getNamesAndScoreboardInfo() {
-  //! Add fetch from backend
-  // Get player names from local storage and input them to the scoreboard names
   if (localStorage.playerOneName != "" && localStorage.playerOneName) {
     // playerOneName = localStorage.playerOneName;
     if (
@@ -1267,6 +1232,8 @@ function getNamesAndScoreboardInfo() {
 
   p1Score.textContent = player1Score;
   p2Score.textContent = player2Score;
+
+  //Todo -- Add logic to randomly pick the active player from the list of players
   activePlayer = playerOnesName;
 }
 
@@ -1284,9 +1251,6 @@ function displayPlayerTurnMessage() {
 function switchPlayer() {
   if (passed === true) {
     // passed = false;
-    // console.log("activeplayer:", activePlayer)
-    // console.log("playerOnesName", playerOnesName)
-    // console.log("playerTwosName", playerTwosName)
   } else if (activePlayer == playerOnesName) {
     activePlayer = playerTwosName;
     activePlayerScore = player2Score;
@@ -1517,10 +1481,26 @@ function submitGuess() {
 
 //! Round One Function
 async function roundOne() {
+  sessionStorage.currentGame = ""
+  if (sessionStorage.currentGame.length > 0) {
+  const val = { sessionStorage: currentGame };
+  if (!val) {
+    return;
+  }
+  if (!ws) {
+    showMessage("No Websocket Connection");
+    return;
+  }
+  alert(sessionStorage.currentGame)
+  sessionStorage.currentGame = ""
+  alert(sessionStorage.currentGame)
+
+  ws.send(val);
+
   pullGameInformationFromSessionStorage();
   getNamesAndScoreboardInfo();
   displayPlayerTurnMessage();
-
+}
   function pullGameInformationFromSessionStorage() {
     /* 
   Destructure game information from session storage
@@ -1530,8 +1510,11 @@ async function roundOne() {
 
 */
 
+
     let { category, className, gameName, question, answer } = sessionStorage;
-    broadcastGameInformation(category, className, gameName, question, answer);
+
+    //! must have an open websocket
+    // broadcastGameInformation(category, className, gameName, question, answer);
     sessionStorage.question = "";
     sessionStorage.answer = "";
     question = JSON.parse(question);
@@ -1549,8 +1532,6 @@ async function roundOne() {
     for (let index = 0; index < 6; index += 6) {
       let answerArray = Object.entries(answer);
       let questionArray = Object.entries(question);
-      // console.log("question in sessionstorage:",question);
-      // console.log("questionArray created from storage:",questionArray)
       for (const item of answerArray) {
         gameplayAnswers.push(item[1].split("\r\n"));
       }
@@ -1571,15 +1552,12 @@ async function roundOne() {
         tempQuestionsArray.push(gameplayQuestions[i][item]);
       }
     }
-    // console.log("placeholderQuestions:", placeholderQuestions);
     for (let position = 0; position < 6; position++) {
       for (let i = 0; i < 6; i++) {
         roundOneArray[position].question = question[`question_${position}`];
         roundOneArray[position].answer = answer[`answer_${position}`];
         roundOneArray[position].category = category[`category_${position}`];
       }
-
-      // console.log(tempAnswersArray)
       for (let i = 0; i < 36; i++) {
         if (!roundOneArray[i]) {
           roundOneArray.push([]);
@@ -1596,6 +1574,7 @@ async function roundOne() {
       }
     }
   }
+
   for (let m = 0; roundTwoArray.length < 36; m++) {
     for (let questionPosition = m; questionPosition < 60; questionPosition++) {
       for (let catIndex = 0; catIndex < 6; catIndex++) {
@@ -1608,8 +1587,6 @@ async function roundOne() {
       }
     }
   }
-
-  // console.log("roundOneArray:",roundOneArray)
   const tempRoundOneArray = [];
   for (let i = 0; i < 6; i++) {
     for (let j = 0; j < roundOneArray.length; j += 6) {
@@ -1625,17 +1602,14 @@ async function roundOne() {
     }
     tempRoundOneArray[i].score = 200 + j;
   }
-  roundOneArray = tempRoundOneArray;
 
-  //! Reactivate this after looking into the loop
-  // fetchRandomCategories();
-  // fetchCategories();
+  //! Change this to the WS object
+  roundOneArray = tempRoundOneArray;
 
   //!------------------------------------- Fill in the Answer board --------------------------------------
 
   // First Row
   for (let i = 0; i < 6; i++) {
-    // answer200.textContent = `$200`;
     if (round === "round1") {
       answer200.textContent = `$200`;
     } else if (round === "round2") {
@@ -1691,12 +1665,6 @@ async function roundOne() {
   for (let i = 0; i < answerSquares.length; i++) {
     answerSquares[i].addEventListener("click", function clicked() {
       passed = false;
-      // index = i;
-      // if (round === "round1") {
-
-      // } else if (round === "round2") {
-
-      // }
 
       let box = answerSquares[i];
       activateButtons();
@@ -1705,14 +1673,9 @@ async function roundOne() {
 
       //! This fills in the question (answer) when the box is clicked.
       if (round === "round1") {
-        console.log(i);
-        console.log(roundOneArray);
-        // console.log(roundOneArray)
         textDispCont.textContent = roundOneArray[i].question;
-        console.log("pointsAvailable:", roundOneArray[i].score);
       } else if (round === "round2") {
         textDispCont.textContent = roundTwoArray[i].question;
-        console.log("pointsAvailable:", roundTwoArray[i].score);
       }
 
       //! When clicked, the guess button calls submitGuess
