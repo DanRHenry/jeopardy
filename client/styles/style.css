@@ -97,6 +97,24 @@ hr {
   padding-right: 0.5em;
 }
 
+.accordion-button {
+  z-index: 1;
+}
+.start_game {
+  position: relative;
+  left: 103%;
+  top: -1em;
+  color: black;
+  font-size: clamp(8px, 14px, 10vw);
+  /* z-index: 2; */
+  /* width: 10%; */
+  /* background-color: red; */
+}
+
+.start_game :hover {
+  color: gray;
+}
+
 #addBtnPosition{
   /* display: flex; */
   /* align-items: center; */
@@ -515,7 +533,7 @@ aside div {
 #classLists {
   /* width: 40vw; */
   border: 3px solid black;
-  border-radius: 1em;
+  border-radius: .25em;
   padding: 1em;
   margin-top: 1em;
   margin-left: 5vw;
@@ -524,10 +542,29 @@ aside div {
   height: fit-content;
 }
 
-.accordion-item {
+.gamesListAccordionItem {
   margin-left: 1.5em;
   margin-right: 1.5em;
+  max-width: 80%;
 }
+
+#studentNamesItems {
+  padding-left: 1.5em;
+  padding-right: 1.5em;
+  margin-left: 1.5em;
+  margin-right: 1.5em;
+  padding-top: 1em;
+  padding-bottom: 1em;
+  /*width: 40%; */
+  border-radius: .25em;
+  background-color: white;
+  color: black;
+}
+
+/* .students {
+  color: black;
+} */
+
 #classLists > h1, #selector {
   text-align: center;
 }
@@ -539,9 +576,9 @@ aside div {
   width: 90vw;
 }
 
-#addedCategories, #availableGames{
+#addedCategories, #availableGames, #availableNames {
   border: 3px solid black;
-  border-radius: 1em;
+  border-radius: .25em;
   padding: 1em;
   background-color: gray;
   height: 100%;
@@ -552,15 +589,37 @@ aside div {
   margin-bottom: 1em;
   padding-top: 3em;
   padding-bottom: 3em;
+  /* background-color: red; */
 }
 
-#addedCategories > h1, #availableGames > h1 {
+#availableGamesItems{
+  display: flex;
+  flex-direction: column;
+  /* background-color: blue; */
+}
+
+#addedCategories > h1, #availableGames > h1, #availableNames> h1 {
   text-align: center;
 }
 
-#availableGamesList {
+#availableGamesList, #studentNamesWrapper {
   padding-top: 1.5em;
+  width: 90%;
 }
+
+#studentNamesWrapper {
+  background-color: gray;
+}
+
+/* #studentNames {
+  padding-top: 1.5em;
+  width: 100%;
+}
+*/
+/* #studentNames, #availableGamesList {
+  background-color: blue;
+}  */
+
 .categoryItems{
   font-size: medium;
 }
@@ -603,7 +662,7 @@ aside div {
     position: relative;
     top: -.5em;
     margin-left: 1em;
-    border-radius: .5em;
+    border-radius: .25em;
     border: 1px solid rgb(150, 150, 150);
     text-align: center;
 }
