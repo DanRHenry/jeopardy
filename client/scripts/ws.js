@@ -53,10 +53,7 @@ wsSend.addEventListener("click", () => {
   if (!ws) {
     showMessage("No Websocket Connection");
     return;
-  } else if (!ws) {
-    showMessage("No Websocket Connection");
-    return;
-  }
+  } 
 
   ws.send(val.input);
   showMessage(val.input);
