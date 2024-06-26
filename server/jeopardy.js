@@ -14,7 +14,7 @@ wss.on("connection", function connection(ws) {
   ws.send("Welcome new client");
 
   ws.on("message", function incoming(message) {
-    console.log("received: %s", message);
+    // console.log("received: %s", message);
     // ws.send("got your message, duder:" + message);
         // Broadcast the message to every connected client
         wss.clients.forEach(function each(client) {
