@@ -1,10 +1,14 @@
 import placeholderQuestions from "./placeholder-questions.js";
-console.log(sessionStorage.gameName)
+console.log(sessionStorage.gameName);
 if (sessionStorage.gameName?.length > 0) {
   // sessionStorage.currentGame = ""
 }
-console.log(sessionStorage)
+console.log(sessionStorage);
 
+if (document.title === "Jeopardy") {
+  sessionStorage.clear();
+  console.log(sessionStorage);
+}
 // Global DOM Variables
 
 // Gameplay API
@@ -23,71 +27,28 @@ const ROUND1PATH = "/round-1.html";
 // wsOpen.addEventListener("click", () => {
 // closeConnection();
 // console.log("open clicked")
-const ws = new WebSocket(`ws://localhost:${PORT}`);
+
+const ws = new WebSocket(`ws://127.0.0.1:${PORT}`);
 
 ws.addEventListener("error", () => {
   // showMessage("Websocket error");
-  alert("Websocket Error")
+  alert("Websocket Error");
 });
 
 ws.addEventListener("open", () => {
-  showMessage("Websocket connection established");
+  alert("socket open");
+  // showMessage("Websocket connection established");
 });
 
 ws.addEventListener("close", () => {
-  alert("socket closed")
+  alert("socket closed");
   // showMessage("Websocket connection closed");
 });
 
-
-// });
-
-// wsClose.addEventListener("click", closeConnection);
-
-
-/* 
-// Create WebSocket connection:
-const ws = new WebSocket(`ws://127.0.0.1:${serverPort}`);
-
-// Connection Opened:
-wsInput.addEventListener("open", function (event) {
-
-  // Listen for Messages:
-  ws.addEventListener("message", function (event) {
-    console.log("message incoming:", event.data);
-  });
-
-  let category = "";
-  let className = "";
-  let gameName = "";
-  let question = "";
-  let answer = "";
-  const gamePlayObject = {
-    category: category,
-    className: className,
-    gameName: gameName,
-    question: question,
-    answer: answer,
-  };
-
-  // socket.addEventListener("game")
-  function broadcastGameInformation(
-    category,
-    className,
-    gameName,
-    question,
-    answer
-  ) {
-    if (!ws) {
-      showMessage("No Websocket Connection");
-      return;
-    }
-    ws.send("gameInformation", function () {
-      ws.send(JSON.stringify(gamePlayObject));
-    });
-  }
+ws.addEventListener("message", (message) => {
+  alert(message.data);
+  // showMessage(`received message: ${message.data}`);
 });
-*/
 
 //! Title Page
 const teacherSignInBtn = document.getElementById("teacherSignIn");
@@ -127,7 +88,7 @@ if (document.title === "Teacher Login") {
     }
   });
 
-  const handleSubmit = async () => {
+  const submitTeacherLogin = async () => {
     if (document.getElementById("adminLoginHeader").textContent === "Log In") {
       let email = emailInput.value;
       sessionStorage.setItem("email", `${email}@eastlongmeadowma.gov`);
@@ -198,16 +159,37 @@ if (document.title === "Teacher Login") {
     .addEventListener("click", async function submitAdmin(e) {
       e.preventDefault();
 
-      await handleSubmit();
+      await submitTeacherLogin();
       userNameInput.value = "";
       passwordInput.value = "";
       emailInput.value = "";
     });
 }
 
-//! Teacher Sign-up Page
-
 //! Student Registration Page
+const studentNameField = document.getElementById("studentNameField");
+const studentEmailField = document.getElementById("studentEmailField");
+const studentSigninBtn = document.getElementById("studentSigninBtn");
+
+studentSigninBtn?.addEventListener("click", () => {
+  if (
+    studentNameField.value.length === 0 ||
+    studentEmailField.value.length === 0
+  ) {
+    return;
+  }
+  let studentInformationObject = JSON.stringify({
+    displayName: studentNameField.value,
+    //todo change this to add logic to check if the input has the @eastlongmeadowma or not
+    email: `${studentEmailField.value}@eastlongmeadowma.gov`,
+    role: "student",
+    course: "",
+  });
+  console.log(studentInformationObject);
+  //todo open a socket
+  //todo check if the teacher has already logged in (add this to the teacher's side)
+  //todo if the teacher hasn't logged in yet, retry sending the information until the teacher has logged in
+});
 
 //! Game Page
 let roundName = document.getElementsByClassName("round-name");
@@ -275,6 +257,8 @@ let customCategories = {};
 let customQuestions = {};
 let customAnswers = {};
 let currentGame = {};
+const studentList = [];
+
 // --------------------------------------------------- Global Strings -----------------------------------------------------------
 let customGameName = "";
 const addedCategoriesDefaultHTML = `\n <h1>Gameplay Categories:</h1><ol id="tempCategories"></ol>\n`;
@@ -483,11 +467,11 @@ if (document.title === "Editor") {
   };
 
   // -------------------------------------------- Fetch Student List API Call ---------------------------------------------
-  const fetchStudentList = async () => {
-    const url = `${apiServer}/user/`;
-    let result = await fetch(url);
-    let data = await result.json();
-  };
+  // const fetchStudentList = async () => {
+  //   const url = `${apiServer}/user/`;
+  //   let result = await fetch(url);
+  //   let data = await result.json();
+  // };
 
   // ---------------------------------- Fetch Games from API and set to availableGames object ------------------------------
   const fetchGames = async () => {
@@ -978,7 +962,8 @@ if (document.title === "Editor") {
       // console.log("availableGamesResults", availableGamesResults);
       for (let i = 0; i < availableGamesResults.length; i++) {
         const gamesListAccordionItem = document.createElement("div");
-        gamesListAccordionItem.className = "accordion-item accordionGamesItems gamesListAccordionItem";
+        gamesListAccordionItem.className =
+          "accordion-item accordionGamesItems gamesListAccordionItem";
         availableGamesList.appendChild(gamesListAccordionItem);
 
         const accordionHeader = document.createElement("h2");
@@ -1000,17 +985,17 @@ if (document.title === "Editor") {
           `collapseGame${i}`
         );
 
-        gamesListAccordionButton.innerText =
-          availableGames.getAllGameplayInformation[i].gameName;
+        const gameName = availableGames.getAllGameplayInformation[i].gameName;
+        gamesListAccordionButton.innerText = gameName;
         accordionHeader.appendChild(gamesListAccordionButton);
 
         // ---------------- On click, send the selected Game Information to the currentGame global object ------------------
         const gameSelector = document.createElement("a");
         gameSelector.href = `${PREFIX}${PORT}${ROUND1PATH}`;
         gameSelector.innerText = "Start Game";
-        gameSelector.className = "start_game"
+        gameSelector.className = "start_game";
 
-//! ------- Start Game Event Listener (Sends the game information through the websockets) ----------
+        //! ------- Start Game Event Listener (Sends the game information through the websockets) ----------
         gameSelector.addEventListener("click", () => {
           currentGame = availableGames.getAllGameplayInformation[i];
           // console.log(currentGame.question)
@@ -1026,6 +1011,7 @@ if (document.title === "Editor") {
             "category",
             JSON.stringify(currentGame.category)
           );
+          sessionStorage.setItem("gameStarted", true);
         });
 
         // availableGamesList.appendChild(gameSelector);
@@ -1074,30 +1060,29 @@ if (document.title === "Editor") {
   }
 
   async function fillAvailableStudentsList() {
-    const studentList = [{"studentName": "Fred"}, {"studentName": "George"}]
-    const studentNamesItems = document.getElementById("studentNamesItems")
-    const students = document.getElementsByClassName("students")
-    studentList.forEach(student => {
-      console.log("students:",students)
+    const studentNamesItems = document.getElementById("studentNamesItems");
+    const students = document.getElementsByClassName("students");
+    studentList.forEach((student) => {
+      console.log("students:", students);
       // if (!students.includes(student.studentName)) { //todo change this to email
       const entry = document.createElement("button");
       // const entry = document.createElement("div");
       entry.textContent = student.studentName;
-      entry.className = "students"
+      entry.className = "students";
       entry.addEventListener("click", () => {
         if (entry.style.backgroundColor === "black") {
-          entry.style.backgroundColor = "white"
-          entry.style.color = "black"
+          entry.style = null;
+          // entry.style.backgroundColor = "white"
+          // entry.style.color = "green"
           // sessionStorage.studentList.entry.textContent() // todo finish changing the flag in session storage when clicked, so they may be removed from the game
           return;
         }
         entry.style.backgroundColor = "black";
-        entry.style.color = "white"
-      })
+        entry.style.color = "white";
+      });
       studentNamesItems.append(entry);
-      // } 
-
-    })
+      // }
+    });
   }
 }
 
@@ -1481,26 +1466,46 @@ function submitGuess() {
 
 //! Round One Function
 async function roundOne() {
-  sessionStorage.currentGame = ""
-  if (sessionStorage.currentGame.length > 0) {
+  // const ws = new WebSocket(`ws://127.0.0.1:${PORT}`);
+  sessionStorage.currentGame = "";
+  // if (sessionStorage.currentGame.length > 0) {
   const val = { sessionStorage: currentGame };
-  if (!val) {
-    return;
-  }
-  if (!ws) {
-    showMessage("No Websocket Connection");
-    return;
-  }
-  alert(sessionStorage.currentGame)
-  sessionStorage.currentGame = ""
-  alert(sessionStorage.currentGame)
+  const gameObject = {};
+  gameObject.answer = sessionStorage.answer;
+  gameObject.category = sessionStorage.category;
+  gameObject.className = sessionStorage.className;
+  gameObject.question = sessionStorage.question;
+  gameObject.gameStarted = sessionStorage.gameStarted;
 
-  ws.send(val);
+  const ws = new WebSocket("ws://127.0.0.1:3300");
+  ws.addEventListener("open", () => {
+    console.log("sending now...");
+    console.log(gameObject);
+    ws.send(JSON.stringify(gameObject));
+    console.log("sent done");
+  });
 
-  pullGameInformationFromSessionStorage();
-  getNamesAndScoreboardInfo();
-  displayPlayerTurnMessage();
-}
+  ws.addEventListener("message", (message) => {
+    if (message.data[0] === "{") {
+      message = JSON.parse(message.data);
+      console.log(message.question);
+      // let answer = message.answer;
+      // let category = message.category;
+      // let className = message.className;
+      // let gameStarted = message.gameStarted;
+      // let question = message.question;
+      sessionStorage.answer = message.answer;      sessionStorage.category = message.category;
+      sessionStorage.question = message.question;
+      sessionStorage.className = message.className;
+      sessionStorage.gameStarted = "true";
+      pullGameInformationFromSessionStorage();
+      getNamesAndScoreboardInfo();
+      displayPlayerTurnMessage();
+    }
+  });
+
+
+  // }
   function pullGameInformationFromSessionStorage() {
     /* 
   Destructure game information from session storage
@@ -1509,7 +1514,6 @@ async function roundOne() {
   Fill gameplayCategories array with category items, duplicating six times for each category
 
 */
-
 
     let { category, className, gameName, question, answer } = sessionStorage;
 

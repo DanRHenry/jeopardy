@@ -39,7 +39,8 @@ wsOpen.addEventListener("click", () => {
 
   //! This is what will handle what to do with incoming messages (keys/values that will control the game's changes)
   ws.addEventListener("message", (message) => {
-    showMessage(`received message: ${message.data}`);
+    alert(message.data)
+    // showMessage(`received message: ${message.data}`);
   });
 });
 
