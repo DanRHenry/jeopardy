@@ -1,9 +1,9 @@
 import placeholderQuestions from "./placeholder-questions.js";
-console.log(sessionStorage.gameName);
+// console.log(sessionStorage.gameName);
 if (sessionStorage.gameName?.length > 0) {
   // sessionStorage.currentGame = ""
 }
-console.log(sessionStorage);
+// console.log(sessionStorage);
 
 if (document.title === "Jeopardy") {
   sessionStorage.clear();
@@ -28,20 +28,24 @@ const ws = new WebSocket(`ws://127.0.0.1:${PORT}`);
 
 ws.addEventListener("error", () => {
   // showMessage("Websocket error");
-  alert("Websocket Error");
+  // alert("Websocket Error");
+  console.log("Websocket Error");
 });
 
 ws.addEventListener("open", () => {
-  alert("socket open");
+  console.log("socket open");
+  // alert("socket open");
   // showMessage("Websocket connection established");
 });
 
 ws.addEventListener("close", () => {
-  alert("socket closed");
+  console.log("socket closed");
+  // alert("socket closed");
   // showMessage("Websocket connection closed");
 });
 
 ws.addEventListener("message", (message) => {
+  console.log("Line 48")
   alert(message.data);
   // showMessage(`received message: ${message.data}`);
 });
@@ -110,6 +114,7 @@ if (document.title === "Teacher Login") {
           window.location.href = `${PREFIX}${PORT}/edit-content.html`;
         } else {
           alert("Not Found");
+          console.log("Not Found")
         }
       } catch (err) {
         console.error(err);
@@ -140,7 +145,8 @@ if (document.title === "Teacher Login") {
           console.log("user created! Yay! Now move to the round one screen");
         } else {
           console.log("Oops, user not created...");
-          alert(data.message);
+          // alert(data.message);
+          console.log(data.message)
         }
       } catch (err) {
         console.error(err);
@@ -174,20 +180,22 @@ studentSigninBtn?.addEventListener("click", () => {
   ) {
     return;
   }
+
   let playerObject = JSON.stringify({
-    displayName: studentNameField.value,
+    studentName: studentNameField.value,
     //todo change this to add logic to check if the input has the @eastlongmeadowma or not
     email: `${studentEmailField.value}@eastlongmeadowma.gov`,
     role: "student",
     course: "",
   });
-  console.log(playerObject);
-  studentSigninBtn.addEventListener("click", () => {
-    console.log("sending player object...")
-    ws.send(JSON.stringify(playerObject))
-    console.log("player object sent")
-  })
-  //todo open a socket
+  // console.log(playerObject);
+    const ws = new WebSocket("ws://127.0.0.1:3300");
+    ws.addEventListener("open", () => {
+      console.log("sending player object...")
+      ws.send(JSON.stringify({"playerObject": playerObject}))
+      console.log("sending:", {"playerObject": playerObject})
+      console.log("player object sent")
+    })
   //todo check if the teacher has already logged in (add this to the teacher's side)
   //todo if the teacher hasn't logged in yet, retry sending the information until the teacher has logged in
 });
@@ -248,7 +256,8 @@ let roundTwoArray = [];
 let finalJeopardyCategory = [];
 let classList = [];
 let results = [];
-const studentList = [];
+const studentList = [{"studentName":"Fred", "email": "fred@eastlongmeadowma.gov"}, {"studentName": "George", "email":"george@eastlongmeadowma.gov"}, {"studentName": "Harry", "email": "harry@eastlongmeadowma.gov"}];
+sessionStorage.players = JSON.stringify(studentList);
 
 // -------------------------------------------------- Global Objects ------------------------------------------------------------
 let categoriesObject = {};
@@ -296,7 +305,7 @@ if (document.title === "Jeopardy") {
 //!------------------------------------------- Admin Page Functionality --------------------------------------------------
 
 if (document.title === "Editor") {
-  sessionStorage.players = JSON.stringify([])
+  // sessionStorage.players = JSON.stringify([])
 
   function clearOptions() {
     const option = document.getElementsByTagName("option");
@@ -468,12 +477,6 @@ if (document.title === "Editor") {
     classList = categoriesObject.getAllQuestions;
   };
 
-  // -------------------------------------------- Fetch Student List API Call ---------------------------------------------
-  // const fetchStudentList = async () => {
-  //   const url = `${apiServer}/user/`;
-  //   let result = await fetch(url);
-  //   let data = await result.json();
-  // };
 
   // ---------------------------------- Fetch Games from API and set to availableGames object ------------------------------
   const fetchGames = async () => {
@@ -1006,7 +1009,7 @@ if (document.title === "Editor") {
           sessionStorage.gameName = currentGame.gameName;
           sessionStorage.category = JSON.stringify(currentGame.category);
           sessionStorage.gameStarted = true;
-          sessionStorage.players = "add players here"
+          // sessionStorage.players = "add players here"
         });
         
         accordionHeader.appendChild(gameSelector);
@@ -1459,6 +1462,8 @@ function submitGuess() {
 
 //! Round One Function
 async function roundOne() {
+  console.log("studentList:",studentList)
+
   // const ws = new WebSocket(`ws://127.0.0.1:${PORT}`);
   // sessionStorage.currentGame = "";
   // if (sessionStorage.currentGame.length > 0) {
@@ -1471,8 +1476,10 @@ async function roundOne() {
   gameObject.className = sessionStorage.className;
   gameObject.gameStarted = sessionStorage.gameStarted;
   gameObject.gameName = sessionStorage.gameName;
-  gameObject.playerNames = sessionStorage.playerNames;
+  gameObject.studentList = JSON.stringify(studentList);
+  // gameObject.studentList = sessionStorage.studentList;
   gameObject.playerObject = sessionStorage.playerObject;
+
 
   const ws = new WebSocket("ws://127.0.0.1:3300");
   ws.addEventListener("open", () => {
@@ -1483,28 +1490,38 @@ async function roundOne() {
   });
 
   ws.addEventListener("message", (message) => {
+    console.log("Line# 1493")
+    console.log("message.data:", message.data)
+    alert(message.data)
     if (message.data[0] === "{") {
       message = JSON.parse(message.data);
-      console.log(message.question);
+      console.log("message:",message)
+      // console.log(message.question);
       const {answer, question, category, className, gameStarted, gameName, players, playerObject} = message
-      // let answer = message.answer;
-      // let category = message.category;
-      // let className = message.className;
-      // let gameStarted = message.gameStarted;
-      // let question = message.question;
+
       sessionStorage.answer = answer;      
       sessionStorage.category = category;
       sessionStorage.question = question;
       sessionStorage.className = className;
       sessionStorage.gameStarted = gameStarted;
+
+      studentList.push(JSON.parse(playerObject))
+      console.log("studentList after message:", studentList)
+      // if (!studentList.includes(playerObject.email)) {
+      //   console.log("not found, so pushing", playerObject)
+      //   studentList.push(playerObject)
+      // }
+      // sessionStorage.players = studentList
+      // if (sessionStorage.players.length > 0){
+      //   let temp = sessionStorage.players
+      // console.log("sessionStorage.players:", sessionStorage.players);
+      
+      // }
+
+      // sessionStorage.playerList.push(playerObject)
       
       //Todo Finish looking for students in the websocket, as they submit
-      if (!studentList.includes(playerObject.email)) {
-        console.log("not found, so pushing", playerObject)
-        JSON.parse(sessionStorage.players).push(playerObject);
-      }
-      // )
-      sessionStorage.playerNames
+      
       pullGameInformationFromSessionStorage(answer, question, category, className, gameName, players, playerObject, gameStarted);
       getNamesAndScoreboardInfo();
       displayPlayerTurnMessage();
