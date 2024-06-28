@@ -24,32 +24,6 @@ const PORT = 8080;
 const EDITPATH = "/edit-content.html";
 const ROUND1PATH = "/round-1.html";
 
-const ws = new WebSocket(`ws://127.0.0.1:${PORT}`);
-
-ws.addEventListener("error", () => {
-  // showMessage("Websocket error");
-  // alert("Websocket Error");
-  console.log("Websocket Error");
-});
-
-ws.addEventListener("open", () => {
-  console.log("socket open");
-  // alert("socket open");
-  // showMessage("Websocket connection established");
-});
-
-ws.addEventListener("close", () => {
-  console.log("socket closed");
-  // alert("socket closed");
-  // showMessage("Websocket connection closed");
-});
-
-ws.addEventListener("message", (message) => {
-  console.log("Line 48")
-  alert(message.data);
-  // showMessage(`received message: ${message.data}`);
-});
-
 //! Title Page
 const teacherSignInBtn = document.getElementById("teacherSignIn");
 const studentRegistrationBtn = document.getElementById("studentRegistration");
@@ -67,6 +41,7 @@ const updateToken = (newToken) => {
 
 //! Teacher Sign-in Page
 if (document.title === "Teacher Login") {
+
   let displayNameInput = document.getElementById("nameField");
   let passwordInput = document.getElementById("passwordField");
   let emailInput = document.getElementById("emailField");
@@ -256,7 +231,7 @@ let roundTwoArray = [];
 let finalJeopardyCategory = [];
 let classList = [];
 let results = [];
-const studentList = [{"studentName":"Fred", "email": "fred@eastlongmeadowma.gov"}, {"studentName": "George", "email":"george@eastlongmeadowma.gov"}, {"studentName": "Harry", "email": "harry@eastlongmeadowma.gov"}];
+let studentList = [];
 sessionStorage.players = JSON.stringify(studentList);
 
 // -------------------------------------------------- Global Objects ------------------------------------------------------------
@@ -305,6 +280,83 @@ if (document.title === "Jeopardy") {
 //!------------------------------------------- Admin Page Functionality --------------------------------------------------
 
 if (document.title === "Editor") {
+    
+  const ws = new WebSocket(`ws://127.0.0.1:3300`);
+
+// ws.addEventListener("error", () => {
+//   // showMessage("Websocket error");
+//   // alert("Websocket Error");
+//   console.log("Websocket Error");
+// });
+
+// ws.addEventListener("open", () => {
+//   console.log("socket open");
+//   // alert("socket open");
+//   // showMessage("Websocket connection established");
+// });
+
+// ws.addEventListener("close", () => {
+//   console.log("socket closed");
+//   // alert("socket closed");
+//   // showMessage("Websocket connection closed");
+// });
+
+// ws.addEventListener("message", (message) => {
+//   console.log("Line 48")
+//   alert(message.data);
+//   // showMessage(`received message: ${message.data}`);
+// });
+
+const socket = new WebSocket("ws://127.0.0.1:3300");
+socket.addEventListener("open", () => {
+  console.log("sending now...");
+  // console.log(gameObject);
+  // socket.send(JSON.stringify(gameObject));
+  // console.log("sent done");
+});
+
+socket.addEventListener("message", (message) => {
+  console.log("Line# 80")
+  console.log("message.data:", message.data)
+  // alert(message.data)
+  if (message.data[0] === "{") {
+    message = JSON.parse(message.data);
+    console.log("message:",message)
+    // console.log(message.question);
+    let {playerObject} = message
+
+    studentList.push(JSON.parse(playerObject))
+    // console.log("studentList after message:", studentList)
+    fillAvailableStudentsList();
+    // studentList.forEach((student) => {
+    //   sessionStorage.setItem("players", JSON.stringify(studentList))
+    // })
+    
+
+    // studentList = [];
+    playerObject = {}
+    // if (!studentList.includes(playerObject.email)) {
+    //   console.log("not found, so pushing", playerObject)
+    //   studentList.push(playerObject)
+    // }
+    // sessionStorage.players = studentList
+    // if (sessionStorage.players.length > 0){
+    //   let temp = sessionStorage.players
+    // console.log("sessionStorage.players:", sessionStorage.players);
+    
+    // }
+
+    // sessionStorage.playerList.push(playerObject)
+    
+    //Todo Finish looking for students in the websocket, as they submit
+    
+    // pullGameInformationFromSessionStorage(answer, question, category, className, gameName, players, playerObject, gameStarted);
+    // getNamesAndScoreboardInfo();
+    // displayPlayerTurnMessage();
+  }
+});
+
+
   // sessionStorage.players = JSON.stringify([])
 
   function clearOptions() {
@@ -1009,6 +1061,8 @@ if (document.title === "Editor") {
           sessionStorage.gameName = currentGame.gameName;
           sessionStorage.category = JSON.stringify(currentGame.category);
           sessionStorage.gameStarted = true;
+          sessionStorage.players = JSON.stringify(studentList)
+
           // sessionStorage.players = "add players here"
         });
         
@@ -1056,7 +1110,9 @@ if (document.title === "Editor") {
   }
 
   async function fillAvailableStudentsList() {
+
     const studentNamesItems = document.getElementById("studentNamesItems");
+    studentNamesItems.innerHTML = null;
     const students = document.getElementsByClassName("students");
     studentList.forEach((student) => {
       console.log("students:", students);
@@ -1067,6 +1123,8 @@ if (document.title === "Editor") {
       entry.className = "students";
       entry.addEventListener("click", () => {
         if (entry.style.backgroundColor === "black") {
+          studentList.push(student)
+          console.log("studentList:", studentList)
           entry.style = null;
           // entry.style.backgroundColor = "white"
           // entry.style.color = "green"
@@ -1075,6 +1133,11 @@ if (document.title === "Editor") {
         }
         entry.style.backgroundColor = "black";
         entry.style.color = "white";
+        studentList.splice(studentList.indexOf(student))
+        console.log("studentList:",studentList);
+        console.log("student:", student)
+
+        //todo remove or add from studentList, search for entries by the entry information
       });
       studentNamesItems.append(entry);
       // }
@@ -1462,7 +1525,7 @@ function submitGuess() {
 
 //! Round One Function
 async function roundOne() {
-  console.log("studentList:",studentList)
+  // console.log("studentList:",studentList)
 
   // const ws = new WebSocket(`ws://127.0.0.1:${PORT}`);
   // sessionStorage.currentGame = "";
@@ -1492,7 +1555,7 @@ async function roundOne() {
   ws.addEventListener("message", (message) => {
     console.log("Line# 1493")
     console.log("message.data:", message.data)
-    alert(message.data)
+    // alert(message.data)
     if (message.data[0] === "{") {
       message = JSON.parse(message.data);
       console.log("message:",message)
