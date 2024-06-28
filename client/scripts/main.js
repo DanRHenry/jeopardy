@@ -1118,29 +1118,23 @@ socket.addEventListener("message", (message) => {
       console.log("students:", students);
       // if (!students.includes(student.studentName)) { //todo change this to email
       const entry = document.createElement("button");
-      // const entry = document.createElement("div");
       entry.textContent = student.studentName;
       entry.className = "students";
       entry.addEventListener("click", () => {
         if (entry.style.backgroundColor === "black") {
-          studentList.push(student)
-          console.log("studentList:", studentList)
           entry.style = null;
-          // entry.style.backgroundColor = "white"
-          // entry.style.color = "green"
-          // sessionStorage.studentList.entry.textContent() // todo finish changing the flag in session storage when clicked, so they may be removed from the game
+          delete studentList[studentList.indexOf(student)].remove;
+          console.log("studentList:",studentList)
+          console.log("student:", student)
           return;
         }
         entry.style.backgroundColor = "black";
         entry.style.color = "white";
-        studentList.splice(studentList.indexOf(student))
+        studentList[studentList.indexOf(student)].remove = true;
         console.log("studentList:",studentList);
         console.log("student:", student)
-
-        //todo remove or add from studentList, search for entries by the entry information
       });
       studentNamesItems.append(entry);
-      // }
     });
   }
 }
