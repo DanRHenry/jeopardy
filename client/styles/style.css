@@ -166,11 +166,18 @@ hr {
   grid-template-columns: 20% 80%;
 }
 
+#players_container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+
 .finalGrid {
   margin-left: 6vw;
 }
 
 aside {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   max-width: 8em;
   max-height: fit-content;
   color: black;
@@ -181,9 +188,9 @@ aside {
   padding-bottom: 2vw;
 }
 
-aside div {
+/* aside div {
   margin: 1em 1em 0 1em;
-}
+} */
 
 .answerBoard {
   margin-right: 25vw;
