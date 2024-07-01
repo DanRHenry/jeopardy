@@ -1040,7 +1040,7 @@ socket.addEventListener("message", (message) => {
         accordionHeader.appendChild(gamesListAccordionButton);
 
         // ---------------- On click, send the selected Game Information to the currentGame global object ------------------
-        const gameSelector = document.createElement("div");
+        const gameSelector = document.createElement("a");
         // const gameSelector = document.createElement("a");
         gameSelector.href = `${PREFIX}${PORT}${ROUND1PATH}`;
         gameSelector.innerText = "Start Game";
@@ -1048,6 +1048,7 @@ socket.addEventListener("message", (message) => {
 
         //! ------- Start Game Event Listener (Sends the game information through the websockets) ----------
         gameSelector.addEventListener("click", () => {
+          console.log("studentList:", studentList)
           currentGame = availableGames.getAllGameplayInformation[i];
 
           sessionStorage.question = JSON.stringify(currentGame.question);
@@ -1056,34 +1057,13 @@ socket.addEventListener("message", (message) => {
           sessionStorage.category = JSON.stringify(currentGame.category);
           sessionStorage.gameStarted = true;
           //! This is the studentList that ends up in the gameplay
-          // let indicesToRemove = [];
-          console.log("studentList:",studentList)
+          const tempList = []
           studentList.forEach((student) => {
-            console.log("student:",student)
-            if (student.remove) {
-              // console.log('student:', student)
-              studentList.splice([studentList.indexOf(student)], 1);
+            if (!student.remove) {
+              tempList.push(student)
             }
           })
-          alert(JSON.stringify(studentList))
-          // for (let i = 0; i < studentList.length; i++) {
-          //   console.log("i:",i)
-          //   if (studentList[i].remove) {
-          //     // indicesToRemove.push(i)
-          //     studentList.splice(i, 1)
-          //     i = 0;
-          //   }
-          // }
-          // alert(JSON.stringify(indicesToRemove))
-        //   if (indicesToRemove.length > 0) {
-        //   for (let i = indicesToRemove.length; i >= 0; i--) {
-        //     studentList.splice((indicesToRemove[i]),1)
-        //   }
-        // }
-        alert(JSON.stringify(studentList))
-        // sessionStorage.setItem(players, studentList)
-          sessionStorage.players = JSON.stringify(studentList)
-          // sessionStorage.players = "add players here"
+          sessionStorage.players = JSON.stringify(tempList);
         });
         
         accordionHeader.appendChild(gameSelector);
@@ -1134,7 +1114,7 @@ socket.addEventListener("message", (message) => {
     studentNamesItems.innerHTML = null;
     const students = document.getElementsByClassName("students");
     studentList.forEach((student) => {
-      console.log("students:", students);
+      // console.log("students:", students);
       // if (!students.includes(student.studentName)) { //todo change this to email
       const entry = document.createElement("button");
       entry.textContent = student.studentName;
@@ -1142,16 +1122,14 @@ socket.addEventListener("message", (message) => {
       entry.addEventListener("click", () => {
         if (entry.style.backgroundColor === "black") {
           entry.style = null;
-          delete studentList[studentList.indexOf(student)].remove;
-          console.log("studentList:",studentList)
-          console.log("student:", student)
+          delete studentList[studentList.indexOf(student)]?.remove;
           return;
         }
         entry.style.backgroundColor = "black";
         entry.style.color = "white";
         studentList[studentList.indexOf(student)].remove = true;
-        console.log("studentList:",studentList);
-        console.log("student:", student)
+        // console.log("studentList:",studentList);
+        // console.log("student:", student)
       });
       studentNamesItems.append(entry);
     });
@@ -1543,6 +1521,7 @@ async function roundOne() {
   gameObject.className = sessionStorage.className;
   gameObject.gameStarted = sessionStorage.gameStarted;
   gameObject.gameName = sessionStorage.gameName;
+  gameObject.players = sessionStorage.players;
   // gameObject.studentList = JSON.stringify(studentList);
   // gameObject.studentList = sessionStorage.studentList;
 
