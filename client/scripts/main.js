@@ -142,6 +142,19 @@ if (document.title === "Teacher Login") {
 }
 
 //! Student Registration Page
+if (document.title === "Student Registration") {
+// }
+console.log("here")
+  const ws = new WebSocket("ws://127.0.0.1:3300");
+  ws.addEventListener("open", () => {
+    console.log("Socket Open")
+  })
+
+// ws.addEventListener("message", (message) => {
+//   // if (!message.data.teache === )
+//   // alert('message received')
+//   alert(JSON.stringify(message.data))
+// })
 const studentNameField = document.getElementById("studentNameField");
 const studentEmailField = document.getElementById("studentEmailField");
 const studentSigninBtn = document.getElementById("studentSigninBtn");
@@ -151,8 +164,13 @@ studentSigninBtn?.addEventListener("click", () => {
     studentNameField.value.length === 0 ||
     studentEmailField.value.length === 0
   ) {
+    alert("Please enter your name and email address")
     return;
   }
+//todo add logic to the teacher side to send a signed-in status to students
+//todo open a socket on the start of the student login page
+//todo send students either to a waiting room, or add a message onscreen to wait for the game to begin
+//todo on game begin, students should be redirected to the jeopardy round one page
 
   let playerObject = JSON.stringify({
     studentName: studentNameField.value,
@@ -160,18 +178,21 @@ studentSigninBtn?.addEventListener("click", () => {
     email: `${studentEmailField.value}@eastlongmeadowma.gov`,
     role: "student",
     course: "",
+    score: 0,
   });
   // console.log(playerObject);
-    const ws = new WebSocket("ws://127.0.0.1:3300");
-    ws.addEventListener("open", () => {
-      console.log("sending player object...")
+
+    // ws.send({
+      // console.log("sending player object...")
       ws.send(JSON.stringify({"playerObject": playerObject}))
       console.log("sending:", {"playerObject": playerObject})
       console.log("player object sent")
-    })
+    // })
   //todo check if the teacher has already logged in (add this to the teacher's side)
   //todo if the teacher hasn't logged in yet, retry sending the information until the teacher has logged in
-});
+})
+}
+;
 
 //! Game Page
 const classNameText = document.getElementById("class-name");
@@ -1041,7 +1062,6 @@ socket.addEventListener("message", (message) => {
 
         // ---------------- On click, send the selected Game Information to the currentGame global object ------------------
         const gameSelector = document.createElement("a");
-        // const gameSelector = document.createElement("a");
         gameSelector.href = `${PREFIX}${PORT}${ROUND1PATH}`;
         gameSelector.innerText = "Start Game";
         gameSelector.className = "start_game";
@@ -1119,6 +1139,10 @@ socket.addEventListener("message", (message) => {
       const entry = document.createElement("button");
       entry.textContent = student.studentName;
       entry.className = "students";
+      if (studentList[studentList.indexOf(student)].remove) {
+        entry.style.backgroundColor = "black"
+        entry.style.color = "white"
+      }
       entry.addEventListener("click", () => {
         if (entry.style.backgroundColor === "black") {
           entry.style = null;
