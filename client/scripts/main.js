@@ -150,10 +150,26 @@ if (document.title === "Student Registration") {
 
   ws.addEventListener("message", (message) => {
     // console.log("message.data:", message.data);
-    if (!message.data === "Welcome new client") {
-      message = JSON.parse(message.data)
+    if (message.data == "Welcome new client") {
+      console.log(message.data);
+      return;
     }
-    console.log("message.answer:", message.answer)
+    if (message.data == "gameStarted") {
+      sessionStorage.gameStarted = true;
+
+      //todo -- before the students have been redirected to the game page, send appropriate game information to fill in questions, answers, etc.
+
+      window.location.href = `${PREFIX}${PORT}${ROUND1PATH}`
+      return;
+    }
+    if (!message.data === "Welcome new client") {
+      alert(JSON.stringify(message.data));
+      return;
+    }
+    // message = JSON.parse(message.data)
+    // console.log("message.data:", message.data)
+    // console.log("message.answer:", message.answer)
+    let gameInformation = JSON.parse(message.data);
     const {
       answer,
       question,
@@ -163,29 +179,22 @@ if (document.title === "Student Registration") {
       gameName,
       players,
       playerObject,
-    } = message;
-    console.log("answer:", answer)
-    console.log("question:", question)
-    console.log("className", className)
-    sessionStorage.answer = answer;
-    sessionStorage.category = category;
-    sessionStorage.question = question;
-    sessionStorage.className = className;
-    sessionStorage.gameStarted = gameStarted;
+    } = gameInformation;
+    // } = message.data;
+    // console.log("answer:", answer)
+    // console.log("question:", question)
+    // console.log("className", className)
+    sessionStorage.answer = `${answer}`;
+    sessionStorage.category = `${category}`;
+    sessionStorage.question = `${question}`;
+    sessionStorage.className = `${className}`;
+    sessionStorage.gameStarted = `${gameStarted}`;
+    sessionStorage.gameName = `${gameName}`;
+    sessionStorage.players = `${players}`;
+
 
     if (message.data === JSON.stringify({ teacherPresent: true })) {
       sessionStorage.teacherPresent = true;
-    }
-    if (message.data === "gameStarted") {
-      sessionStorage.gameStarted = true;
-
-
-      //todo -- before the students have been redirected to the game page, send appropriate game information to fill in questions, answers, etc.
-
-      // window.location.href = `${PREFIX}${PORT}${ROUND1PATH}`
-    }
-    if (!message.data === "Welcome new client") {
-      alert(JSON.stringify(message.data));
     }
   });
   const studentNameField = document.getElementById("studentNameField");
@@ -212,6 +221,8 @@ if (document.title === "Student Registration") {
       course: "",
       score: 0,
     });
+    sessionStorage.email = JSON.stringify(`${studentEmailField.value}@eastlongmeadowma.gov`);
+    sessionStorage.score = 0;
     // console.log(playerObject);
 
     // ws.send({
@@ -223,7 +234,7 @@ if (document.title === "Student Registration") {
         console.log("counter", counter);
         setTimeout(() => {
           checkForTeacherAndSendStudentInfo();
-          }, 1000);
+        }, 1000);
       } else {
         ws.send(JSON.stringify({ playerObject: playerObject }));
         console.log("sending:", { playerObject: playerObject });
@@ -1060,24 +1071,33 @@ if (document.title === "Editor") {
 
           sessionStorage.question = JSON.stringify(currentGame.question);
           sessionStorage.answer = JSON.stringify(currentGame.answer);
-          sessionStorage.gameName = currentGame.gameName;
+          sessionStorage.gameName = JSON.stringify(currentGame.gameName);
           sessionStorage.category = JSON.stringify(currentGame.category);
+          sessionStorage.className = JSON.stringify(currentGame.className)
           sessionStorage.gameStarted = true;
 
-          const gameObject = {};
-          gameObject.answer = sessionStorage.answer;
-          gameObject.question = sessionStorage.question;
-          gameObject.category = sessionStorage.category;
-          gameObject.className = sessionStorage.className;
-          gameObject.gameStarted = sessionStorage.gameStarted;
-          gameObject.gameName = sessionStorage.gameName;
-          gameObject.players = sessionStorage.players;
+          let gameObject = JSON.stringify({
+            category: sessionStorage.category,
+            answer: sessionStorage.answer,
+            question: sessionStorage.question,
+            className: sessionStorage.className,
+            players: sessionStorage.players,
+            gameName: sessionStorage.gameName,
+          });
+          // gameObject.answer = sessionStorage.answer;
+          // gameObject.question = JSON.stringify(sessionStorage.question);
+          // gameObject.category = sessionStorage.category;
+          // gameObject.className = sessionStorage.className;
+          // gameObject.gameStarted = sessionStorage.gameStarted;
+          // gameObject.gameName = sessionStorage.gameName;
+          // gameObject.players = sessionStorage.players;
           // gameObject.studentList = JSON.stringify(studentList);
           // gameObject.studentList = sessionStorage.studentList;
-          console.log(gameObject)
-          ws.send(JSON.stringify(gameObject));
+          console.log(gameObject);
+          ws.send(gameObject);
+          // ws.send(JSON.stringify(gameObject));
 
-          ws.send("gameStarted")
+          ws.send("gameStarted");
           //! This is the studentList that ends up in the gameplay
           const tempList = [];
           studentList.forEach((student) => {
@@ -1265,14 +1285,21 @@ function getNamesAndScoreboardInfo() {
   //   console.log("here")
   //   sessionStorage.players = JSON.stringify([{"studentName":"Player 1"},{"studentName":"Player 2"}])
   // }
-  alert(JSON.stringify(sessionStorage.players));
-  let players = JSON.parse(sessionStorage.players);
+  // alert(JSON.stringify(sessionStorage.players));
+  if (sessionStorage.token) {
+    players = JSON.parse(sessionStorage.players);
+    const ws = new WebSocket("ws://127.0.0.1:3300");
+    ws.addEventListener("open", () => {
+      ws.send(JSON.stringify({players: players}))
+    })
+  }
   // let players = [{'studentName': "player 1"}];
   // Todo -- Limit the number of players to the top 5 scorers:
   // Todo -- sort the players by score
   // Todo -- only add the first 5 entries
   // Todo -- on refresh, clear the players and scores html lists
   // console.log("players:",players)
+  function fillPlayerList () {
   players.forEach((player) => {
     const playerListing = document.createElement("div");
     playerListing.innerText = player.studentName;
@@ -1282,9 +1309,13 @@ function getNamesAndScoreboardInfo() {
     playerScore.innerText = player.score;
     document.getElementById("scores").append(playerScore);
   });
+}
+
 
   //Todo -- Add logic to randomly pick the active player from the list of players
   // activePlayer = playerOnesName;
+  fillPlayerList();
+
 }
 
 // Notify that it is player 1's turn to choose
@@ -1541,7 +1572,7 @@ async function roundOne() {
   // if (sessionStorage.currentGame.length > 0) {
   // const val = { sessionStorage: currentGame };
 
-//todo -- move ws.send(JSON.stringify(teacherPresent)); to respond to students signing up after the teacher has already opened the websocket
+  //todo -- move ws.send(JSON.stringify(teacherPresent)); to respond to students signing up after the teacher has already opened the websocket
 
   const ws = new WebSocket("ws://127.0.0.1:3300");
 
@@ -1555,7 +1586,7 @@ async function roundOne() {
     console.log("message.data.teacherPresent:", message.data);
     if (message.data[0] === "{") {
       message = JSON.parse(message.data);
-      console.log("message:", message);
+      console.log("message:", JSON.parse(message));
       // console.log(message.question);
       const {
         answer,
@@ -1573,6 +1604,7 @@ async function roundOne() {
       sessionStorage.question = question;
       sessionStorage.className = className;
       sessionStorage.gameStarted = gameStarted;
+      sessionStorage.players = players;
       if (playerObject) {
         studentList.push(JSON.parse(playerObject));
       }
