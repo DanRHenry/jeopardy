@@ -154,18 +154,20 @@ if (document.title === "Student Registration") {
       console.log(message.data);
       return;
     }
+
     if (message.data == "gameStarted") {
       sessionStorage.gameStarted = true;
 
       //todo -- before the students have been redirected to the game page, send appropriate game information to fill in questions, answers, etc.
 
-      window.location.href = `${PREFIX}${PORT}${ROUND1PATH}`
+      window.location.href = `${PREFIX}${PORT}${ROUND1PATH}`;
       return;
     }
-    if (!message.data === "Welcome new client") {
-      alert(JSON.stringify(message.data));
-      return;
-    }
+
+    // if (!message.data === "Welcome new client") {
+    //   alert(JSON.stringify(message.data));
+    //   return;
+    // }
     // message = JSON.parse(message.data)
     // console.log("message.data:", message.data)
     // console.log("message.answer:", message.answer)
@@ -178,7 +180,7 @@ if (document.title === "Student Registration") {
       gameStarted,
       gameName,
       playerList,
-      playerObject,
+      playerSignupObject,
     } = gameInformation;
     // } = message.data;
     // console.log("answer:", answer)
@@ -189,14 +191,17 @@ if (document.title === "Student Registration") {
     sessionStorage.question = `${question}`;
     sessionStorage.className = `${className}`;
     sessionStorage.gameStarted = `${gameStarted}`;
+    sessionStorage.playerSignupObject = `${playerSignupObject}`;
+    console.log("playerSignupObject", playerSignupObject);
     sessionStorage.gameName = `${gameName}`;
+    // Successfully sending, but not getting the playerList information
     sessionStorage.playerList = `${playerList}`;
-
 
     if (message.data === JSON.stringify({ teacherPresent: true })) {
       sessionStorage.teacherPresent = true;
     }
   });
+
   const studentNameField = document.getElementById("studentNameField");
   const studentEmailField = document.getElementById("studentEmailField");
   const studentSigninBtn = document.getElementById("studentSigninBtn");
@@ -213,7 +218,7 @@ if (document.title === "Student Registration") {
     //todo send students either to a waiting room, or add a message onscreen to wait for the game to begin
     //todo on game begin, students should be redirected to the jeopardy round one page
 
-    let playerObject = JSON.stringify({
+    let playerSignupObject = JSON.stringify({
       studentName: studentNameField.value,
       //todo change this to add logic to check if the input has the @eastlongmeadowma or not
       email: `${studentEmailField.value}@eastlongmeadowma.gov`,
@@ -221,12 +226,11 @@ if (document.title === "Student Registration") {
       course: "",
       score: 0,
     });
-    sessionStorage.email = JSON.stringify(`${studentEmailField.value}@eastlongmeadowma.gov`);
+    sessionStorage.email = JSON.stringify(
+      `${studentEmailField.value}@eastlongmeadowma.gov`
+    );
     sessionStorage.score = 0;
-    // console.log(playerObject);
 
-    // ws.send({
-    // console.log("sending player object...")
     let counter = 0;
     function checkForTeacherAndSendStudentInfo() {
       counter++;
@@ -236,8 +240,8 @@ if (document.title === "Student Registration") {
           checkForTeacherAndSendStudentInfo();
         }, 1000);
       } else {
-        ws.send(JSON.stringify({ playerObject: playerObject }));
-        console.log("sending:", { playerObject: playerObject });
+        ws.send(JSON.stringify({ playerSignupObject: playerSignupObject }));
+        console.log("sending:", { playerSignupObject: playerSignupObject });
         console.log("player object sent");
       }
       // })
@@ -364,11 +368,11 @@ if (document.title === "Editor") {
     if (message.data[0] === "{") {
       message = JSON.parse(message.data);
       console.log("message:", message);
-      let { playerObject } = message;
+      let { playerSignupObject } = message;
 
-      studentList.push(JSON.parse(playerObject));
+      studentList.push(JSON.parse(playerSignupObject));
       fillAvailableStudentsList();
-      playerObject = {};
+      playerSignupObject = {};
     }
   });
 
@@ -1073,8 +1077,18 @@ if (document.title === "Editor") {
           sessionStorage.answer = JSON.stringify(currentGame.answer);
           sessionStorage.gameName = JSON.stringify(currentGame.gameName);
           sessionStorage.category = JSON.stringify(currentGame.category);
-          sessionStorage.className = JSON.stringify(currentGame.className)
+          sessionStorage.className = JSON.stringify(currentGame.className);
           sessionStorage.gameStarted = true;
+
+          //! This is the studentList that ends up in the gameplay
+          const tempList = [];
+          studentList.forEach((student) => {
+            if (!student.remove) {
+              tempList.push(student);
+            }
+          });
+
+          sessionStorage.playerList = JSON.stringify(tempList);
 
           let gameObject = JSON.stringify({
             category: sessionStorage.category,
@@ -1093,19 +1107,11 @@ if (document.title === "Editor") {
           // gameObject.players = sessionStorage.players;
           // gameObject.studentList = JSON.stringify(studentList);
           // gameObject.studentList = sessionStorage.studentList;
-          console.log(gameObject);
           ws.send(gameObject);
+
           // ws.send(JSON.stringify(gameObject));
 
           ws.send("gameStarted");
-          //! This is the studentList that ends up in the gameplay
-          const tempList = [];
-          studentList.forEach((student) => {
-            if (!student.remove) {
-              tempList.push(student);
-            }
-          });
-          sessionStorage.playerList = JSON.stringify(tempList);
         });
 
         accordionHeader.appendChild(gameSelector);
@@ -1290,8 +1296,8 @@ function getNamesAndScoreboardInfo() {
     let playerList = JSON.parse(sessionStorage.playerList);
     const ws = new WebSocket("ws://127.0.0.1:3300");
     ws.addEventListener("open", () => {
-      ws.send(JSON.stringify({playerList: playerList}))
-    })
+      ws.send(JSON.stringify({ playerList: playerList }));
+    });
   }
   // let players = [{'studentName': "player 1"}];
   // Todo -- Limit the number of players to the top 5 scorers:
@@ -1299,24 +1305,23 @@ function getNamesAndScoreboardInfo() {
   // Todo -- only add the first 5 entries
   // Todo -- on refresh, clear the players and scores html lists
   // console.log("players:",players)
-  function fillPlayerList () {
-    console.log("players",playerList)
-  playerList.forEach((player) => {
-    const playerListing = document.createElement("div");
-    playerListing.innerText = player.studentName;
-    document.getElementById("players").append(playerListing);
+  function fillPlayerList() {
+    // console.log("players", sessionStorage.playerList);
+    const playerList = JSON.parse(sessionStorage.playerList);
+    playerList.forEach((player) => {
+      const playerListing = document.createElement("div");
+      playerListing.innerText = player.studentName;
+      document.getElementById("players").append(playerListing);
 
-    const playerScore = document.createElement("div");
-    playerScore.innerText = player.score;
-    document.getElementById("scores").append(playerScore);
-  });
-}
-
+      const playerScore = document.createElement("div");
+      playerScore.innerText = player.score;
+      document.getElementById("scores").append(playerScore);
+    });
+  }
 
   //Todo -- Add logic to randomly pick the active player from the list of players
   // activePlayer = playerOnesName;
   fillPlayerList();
-
 }
 
 // Notify that it is player 1's turn to choose
@@ -1566,14 +1571,6 @@ async function roundOne() {
   if (document.title === "Round-1") {
     getNamesAndScoreboardInfo();
   }
-  // console.log("studentList:",studentList)
-
-  // const ws = new WebSocket(`ws://127.0.0.1:${PORT}`);
-  // sessionStorage.currentGame = "";
-  // if (sessionStorage.currentGame.length > 0) {
-  // const val = { sessionStorage: currentGame };
-
-  //todo -- move ws.send(JSON.stringify(teacherPresent)); to respond to students signing up after the teacher has already opened the websocket
 
   const ws = new WebSocket("ws://127.0.0.1:3300");
 
@@ -1587,7 +1584,7 @@ async function roundOne() {
     console.log("message.data.teacherPresent:", message.data);
     if (message.data[0] === "{") {
       message = JSON.parse(message.data);
-      console.log("message:", JSON.parse(message));
+      // console.log("message:", JSON.parse(message));
       // console.log(message.question);
       const {
         answer,
@@ -1597,7 +1594,7 @@ async function roundOne() {
         gameStarted,
         gameName,
         playerList,
-        playerObject,
+        playerSignupObject,
       } = message;
 
       sessionStorage.answer = answer;
@@ -1606,13 +1603,13 @@ async function roundOne() {
       sessionStorage.className = className;
       sessionStorage.gameStarted = gameStarted;
       sessionStorage.playerList = playerList;
-      if (playerObject) {
-        studentList.push(JSON.parse(playerObject));
+      if (playerSignupObject) {
+        studentList.push(JSON.parse(playerSignupObject));
       }
       // console.log("studentList after message:", studentList)
-      // if (!studentList.includes(playerObject.email)) {
-      //   console.log("not found, so pushing", playerObject)
-      //   studentList.push(playerObject)
+      // if (!studentList.includes(playerSignupObject.email)) {
+      //   console.log("not found, so pushing", playerSignupObject)
+      //   studentList.push(playerSignupObject)
       // }
       // sessionStorage.players = studentList
       // if (sessionStorage.players.length > 0){
@@ -1621,7 +1618,7 @@ async function roundOne() {
 
       // }
 
-      // sessionStorage.playerList.push(playerObject)
+      // sessionStorage.playerList.push(playerSignupObject)
 
       //Todo Finish looking for students in the websocket, as they submit
 
@@ -1632,7 +1629,7 @@ async function roundOne() {
         className,
         gameName,
         players,
-        playerObject,
+        playerSignupObject,
         gameStarted
       );
       getNamesAndScoreboardInfo();
