@@ -177,7 +177,7 @@ if (document.title === "Student Registration") {
       className,
       gameStarted,
       gameName,
-      players,
+      playerList,
       playerObject,
     } = gameInformation;
     // } = message.data;
@@ -190,7 +190,7 @@ if (document.title === "Student Registration") {
     sessionStorage.className = `${className}`;
     sessionStorage.gameStarted = `${gameStarted}`;
     sessionStorage.gameName = `${gameName}`;
-    sessionStorage.players = `${players}`;
+    sessionStorage.playerList = `${playerList}`;
 
 
     if (message.data === JSON.stringify({ teacherPresent: true })) {
@@ -1081,7 +1081,7 @@ if (document.title === "Editor") {
             answer: sessionStorage.answer,
             question: sessionStorage.question,
             className: sessionStorage.className,
-            players: sessionStorage.players,
+            playerList: sessionStorage.playerList,
             gameName: sessionStorage.gameName,
           });
           // gameObject.answer = sessionStorage.answer;
@@ -1105,7 +1105,7 @@ if (document.title === "Editor") {
               tempList.push(student);
             }
           });
-          sessionStorage.players = JSON.stringify(tempList);
+          sessionStorage.playerList = JSON.stringify(tempList);
         });
 
         accordionHeader.appendChild(gameSelector);
@@ -1287,10 +1287,10 @@ function getNamesAndScoreboardInfo() {
   // }
   // alert(JSON.stringify(sessionStorage.players));
   if (sessionStorage.token) {
-    players = JSON.parse(sessionStorage.players);
+    let playerList = JSON.parse(sessionStorage.playerList);
     const ws = new WebSocket("ws://127.0.0.1:3300");
     ws.addEventListener("open", () => {
-      ws.send(JSON.stringify({players: players}))
+      ws.send(JSON.stringify({playerList: playerList}))
     })
   }
   // let players = [{'studentName': "player 1"}];
@@ -1300,7 +1300,8 @@ function getNamesAndScoreboardInfo() {
   // Todo -- on refresh, clear the players and scores html lists
   // console.log("players:",players)
   function fillPlayerList () {
-  players.forEach((player) => {
+    console.log("players",playerList)
+  playerList.forEach((player) => {
     const playerListing = document.createElement("div");
     playerListing.innerText = player.studentName;
     document.getElementById("players").append(playerListing);
@@ -1595,7 +1596,7 @@ async function roundOne() {
         className,
         gameStarted,
         gameName,
-        players,
+        playerList,
         playerObject,
       } = message;
 
@@ -1604,7 +1605,7 @@ async function roundOne() {
       sessionStorage.question = question;
       sessionStorage.className = className;
       sessionStorage.gameStarted = gameStarted;
-      sessionStorage.players = players;
+      sessionStorage.playerList = playerList;
       if (playerObject) {
         studentList.push(JSON.parse(playerObject));
       }
