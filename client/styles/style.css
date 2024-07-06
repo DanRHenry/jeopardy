@@ -710,3 +710,13 @@ aside {
 li {
   user-select: all;
 }
+
+.input-block {
+  margin-top: 1rem;
+}
+
+#messages {
+  height: 20em;
+  overflow: auto;
+  margin-top: 1em;
+}

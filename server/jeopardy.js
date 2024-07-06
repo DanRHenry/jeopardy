@@ -4,13 +4,15 @@ require("dotenv").config();
 const express = require("express");
 const app = express();
 const server = require("http").createServer(app);
+// import { WebSocketServer, WebSocket } from "ws";
 const WebSocket = require("ws");
-const PORT = 3300;
-// const PORT = process.env.PORT || 4900;
+// const PORT = 3300;
+const PORT = process.env.PORT || 3300;
 
 const wss = new WebSocket.Server({ server: server });
 
 wss.on("connection", function connection(ws) {
+
   ws.send("Welcome new client");
 
   ws.on("message", function incoming(message) {
@@ -18,8 +20,12 @@ wss.on("connection", function connection(ws) {
     // ws.send("got your message, duder:" + message);
         // Broadcast the message to every connected client
         wss.clients.forEach(function each(client) {
-          if(client !== ws && client.readyState === WebSocket.OPEN) {
-              client.send("" + message)
+          // Send to All
+          if(client.readyState === WebSocket.OPEN)
+             {
+          // Send to All But Origin
+          // if(client !== ws && client.readyState === WebSocket.OPEN) {
+              client.send(message, {binary: isBinary})
           }
       })
   });
