@@ -1,3 +1,6 @@
+/* 
+
+*/
 import placeholderQuestions from "./placeholder-questions.js";
 // console.log(sessionStorage.gameName);
 if (sessionStorage.gameName?.length > 0) {
@@ -206,7 +209,9 @@ if (document.title === "Student Registration") {
   const studentEmailField = document.getElementById("studentEmailField");
   const studentSigninBtn = document.getElementById("studentSigninBtn");
 
-  studentSigninBtn?.addEventListener("click", () => {
+  studentSigninBtn?.addEventListener("click", studentSignIn);
+
+  function studentSignIn() {
     if (
       studentNameField.value.length === 0 ||
       studentEmailField.value.length === 0
@@ -214,9 +219,12 @@ if (document.title === "Student Registration") {
       alert("Please enter your name and email address");
       return;
     }
-    //todo add logic to the teacher side to send a signed-in status to students
     //todo send students either to a waiting room, or add a message onscreen to wait for the game to begin
-    //todo on game begin, students should be redirected to the jeopardy round one page
+    studentSigninBtn?.removeEventListener("click", studentSignIn);
+    studentSigninBtn.innerText = "Please wait...";
+    const waitingMessage = document.createElement("div");
+    waitingMessage.innerText = "Waiting for game to start...";
+    document.getElementsByTagName("body")[0].append(waitingMessage);
 
     let playerSignupObject = JSON.stringify({
       studentName: studentNameField.value,
@@ -240,8 +248,8 @@ if (document.title === "Student Registration") {
           checkForTeacherAndSendStudentInfo();
         }, 1000);
       } else {
-        ws.send(JSON.stringify({ playerSignupObject: playerSignupObject }));
         console.log("sending:", { playerSignupObject: playerSignupObject });
+        ws.send(JSON.stringify({ playerSignupObject: playerSignupObject }));
         console.log("player object sent");
       }
       // })
@@ -249,8 +257,9 @@ if (document.title === "Student Registration") {
       //todo if the teacher hasn't logged in yet, retry sending the information until the teacher has logged in
     }
     checkForTeacherAndSendStudentInfo();
-  });
+  }
 }
+
 //! Game Page
 const classNameText = document.getElementById("class-name");
 const gameNameText = document.getElementById("game-name");
@@ -346,11 +355,19 @@ if (document.title === "Jeopardy") {
 } else if (document.title === "Round-1") {
   round = "round1";
   roundOne();
-} else if (document.title === "Double Jeopardy") {
-  round = "round2";
-  roundOne();
 } else if (document.title === "Final Jeopardy") {
   round = "final";
+}
+
+//!--------------------------------------------- Title Screen Function ------------------------------------------
+
+function titleScreen() {
+  teacherSignInBtn.addEventListener("click", function signInTeacher() {
+    window.location.href = `${PREFIX}${PORT}/admin_login.html`;
+  });
+  studentRegistrationBtn.addEventListener("click", function signInStudent() {
+    window.location.href = `${PREFIX}${PORT}/student_registration.html`;
+  });
 }
 
 //!------------------------------------------- Admin Page Functionality --------------------------------------------------
@@ -1193,7 +1210,8 @@ if (document.title === "Editor") {
 if (round === "round1") {
   const categories = JSON.parse(sessionStorage.category);
   for (let i = 1; i < 7; i++) {
-    document.getElementById(`catr1-${i}`).innerText = categories[`category_${i-1}`];  
+    document.getElementById(`catr1-${i}`).innerText =
+      categories[`category_${i - 1}`];
   }
 }
 
@@ -1231,17 +1249,6 @@ activeStudentsList?.addEventListener("click", fetchStudentList);
 
 // Get Player Names on the Title Screen and Set to Local Storage
 
-//!--------------------------------------------- Title Screen Function ------------------------------------------
-
-function titleScreen() {
-  teacherSignInBtn.addEventListener("click", function signInTeacher() {
-    window.location.href = `${PREFIX}${PORT}/admin_login.html`;
-  });
-  studentRegistrationBtn.addEventListener("click", function signInStudent() {
-    window.location.href = `${PREFIX}${PORT}/student_registration.html`;
-  });
-}
-
 //!----------------------------------------------- Button Enable/Disable ----------------------------------------
 // Disable the pass and guess buttons / enable the placeholder pass and guess buttons
 function deactivateButtons() {
@@ -1270,6 +1277,19 @@ function enableNextRound() {
   placeholderNextRound.style.display = "none";
 }
 
+function fillPlayerList() {
+  // console.log("players", sessionStorage.playerList);
+  const playerList = JSON.parse(sessionStorage.playerList);
+  playerList.forEach((player) => {
+    const playerListing = document.createElement("div");
+    playerListing.innerText = player.studentName;
+    document.getElementById("players").append(playerListing);
+
+    const playerScore = document.createElement("div");
+    playerScore.innerText = player.score;
+    document.getElementById("scores").append(playerScore);
+  });
+}
 //!------------------------------------------ Scoreboard and Name Functionality ------------------------------------
 
 // Todo -- Change this to deal with multiple players coming from the socket --
@@ -1286,23 +1306,8 @@ function getNamesAndScoreboardInfo() {
   // Todo -- only add the first 5 entries
   // Todo -- on refresh, clear the players and scores html lists
 
-  function fillPlayerList() {
-    // console.log("players", sessionStorage.playerList);
-    const playerList = JSON.parse(sessionStorage.playerList);
-    playerList.forEach((player) => {
-      const playerListing = document.createElement("div");
-      playerListing.innerText = player.studentName;
-      document.getElementById("players").append(playerListing);
-
-      const playerScore = document.createElement("div");
-      playerScore.innerText = player.score;
-      document.getElementById("scores").append(playerScore);
-    });
-  }
-
   //Todo -- Add logic to randomly pick the active player from the list of players
   // activePlayer = playerOnesName;
-  fillPlayerList();
 }
 
 // Notify that it is player 1's turn to choose
@@ -1550,8 +1555,7 @@ async function roundOne() {
       }
       console.log("pullGameInformationFromStorage.message.data:", message.data);
       if (message.data[0] === "{") {
-
-        console.log("message.data:", message.data)
+        console.log("message.data:", message.data);
         message = JSON.parse(message.data);
         const {
           answer,
@@ -1565,102 +1569,101 @@ async function roundOne() {
         } = message;
       }
 
-    pullGameInformationFromSessionStorage(
-      answer,
-      question,
-      category,
-      className,
-      gameName,
-      players,
-      playerSignupObject,
-      gameStarted
-    );
-    getNamesAndScoreboardInfo();
-    displayPlayerTurnMessage();
-    });
-    }
+      // pullGameInformationFromSessionStorage(
+      //   answer,
+      //   question,
+      //   category,
+      //   className,
+      //   gameName,
+      //   players,
+      //   playerSignupObject,
+      //   gameStarted
+      // );
 
+      // }
+      function pullGameInformationFromSessionStorage() {
+        classNameText.textContent = className;
+        gameNameText.textContent = gameName;
 
-  // }
-  function pullGameInformationFromSessionStorage() {
-    classNameText.textContent = className;
-    gameNameText.textContent = gameName;
+        const gameplayAnswers = [];
+        const gameplayQuestions = [];
+        const gameplayCategories = [];
 
-    const gameplayAnswers = [];
-    const gameplayQuestions = [];
-    const gameplayCategories = [];
+        for (let index = 0; index < 6; index += 6) {
+          let answerArray = Object.entries(answer);
+          let questionArray = Object.entries(question);
+          for (const item of answerArray) {
+            gameplayAnswers.push(item[1].split("\r\n"));
+          }
+          for (const item of questionArray) {
+            gameplayQuestions.push(item[1].split("\r\n"));
+          }
+        }
 
-    for (let index = 0; index < 6; index += 6) {
-      let answerArray = Object.entries(answer);
-      let questionArray = Object.entries(question);
-      for (const item of answerArray) {
-        gameplayAnswers.push(item[1].split("\r\n"));
+        for (let index = 0; index < Object.values(category).length; index++) {
+          for (let i = 0; i < 6; i += 6) {
+            gameplayCategories.push(category[`category_${index}`]);
+          }
+        }
+        const tempAnswersArray = [];
+        const tempQuestionsArray = [];
+
+        for (let i = 0; i < gameplayAnswers.length; i++) {
+          for (let item = 0; item < gameplayAnswers[i].length; item++) {
+            tempAnswersArray.push(gameplayAnswers[i][item]);
+            tempQuestionsArray.push(gameplayQuestions[i][item]);
+          }
+        }
+
+        for (let position = 0; position < 6; position++) {
+          for (let i = 0; i < 6; i++) {
+            roundOneArray[position].question = question[`question_${position}`];
+            roundOneArray[position].answer = answer[`answer_${position}`];
+            roundOneArray[position].category = category[`category_${position}`];
+          }
+
+          for (let i = 0; i < 36; i++) {
+            if (!roundOneArray[i]) {
+              roundOneArray.push([]);
+            }
+            if (gameplayCategories[i]) {
+              roundOneArray[i].category = gameplayCategories[i];
+            }
+            if (tempQuestionsArray[i]) {
+              roundOneArray[i].question = tempQuestionsArray[i];
+            }
+            if (tempAnswersArray[i]) {
+              roundOneArray[i].answer = tempAnswersArray[i];
+            }
+          }
+        }
       }
-      for (const item of questionArray) {
-        gameplayQuestions.push(item[1].split("\r\n"));
-      }
-    }
 
-    for (let index = 0; index < Object.values(category).length; index++) {
-      for (let i = 0; i < 6; i += 6) {
-        gameplayCategories.push(category[`category_${index}`]);
-      }
-    }
-    const tempAnswersArray = [];
-    const tempQuestionsArray = [];
-    for (let i = 0; i < gameplayAnswers.length; i++) {
-      for (let item = 0; item < gameplayAnswers[i].length; item++) {
-        tempAnswersArray.push(gameplayAnswers[i][item]);
-        tempQuestionsArray.push(gameplayQuestions[i][item]);
-      }
-    }
-    for (let position = 0; position < 6; position++) {
+      const tempRoundOneArray = [];
       for (let i = 0; i < 6; i++) {
-        roundOneArray[position].question = question[`question_${position}`];
-        roundOneArray[position].answer = answer[`answer_${position}`];
-        roundOneArray[position].category = category[`category_${position}`];
-      }
-      for (let i = 0; i < 36; i++) {
-        if (!roundOneArray[i]) {
-          roundOneArray.push([]);
-        }
-        if (gameplayCategories[i]) {
-          roundOneArray[i].category = gameplayCategories[i];
-        }
-        if (tempQuestionsArray[i]) {
-          roundOneArray[i].question = tempQuestionsArray[i];
-        }
-        if (tempAnswersArray[i]) {
-          roundOneArray[i].answer = tempAnswersArray[i];
+        for (let j = 0; j < roundOneArray.length; j += 6) {
+          tempRoundOneArray.push(roundOneArray[i + j]);
         }
       }
-    }
+
+      // Set the score values
+      let j = 0;
+      for (let i = 0; i < tempRoundOneArray.length; i++) {
+        if (i % 6 === 0 && i != 0) {
+          j += 200;
+        }
+        tempRoundOneArray[i].score = 200 + j;
+      }
+
+      //! Change this to the WS object
+      roundOneArray = tempRoundOneArray;
+      console.log("roundOneArray:", roundOneArray);
+
+      //!------------------------------------- Fill in the Answer board --------------------------------------
+      
+      // displayPlayerTurnMessage();
+    });
   }
-
-  const tempRoundOneArray = [];
-  for (let i = 0; i < 6; i++) {
-    for (let j = 0; j < roundOneArray.length; j += 6) {
-      tempRoundOneArray.push(roundOneArray[i + j]);
-    }
-  }
-
-  // Set the score values
-  let j = 0;
-  for (let i = 0; i < tempRoundOneArray.length; i++) {
-    if (i % 6 === 0 && i != 0) {
-      j += 200;
-    }
-    tempRoundOneArray[i].score = 200 + j;
-  }
-
-  //! Change this to the WS object
-  roundOneArray = tempRoundOneArray;
-  console.log("roundOneArray:", roundOneArray);
-
-  //!------------------------------------- Fill in the Answer board --------------------------------------
-
-
-
   // First Row
   for (let i = 0; i < 6; i++) {
     if (round === "round1") {
@@ -1730,11 +1733,13 @@ async function roundOne() {
       if (round === "round1") {
         // textDispCont.textContent = roundOneArray[i].question;
         textDispCont.textContent = roundOneArray[i].question;
-      } 
+      }
 
       //! When clicked, the guess button calls submitGuess
       guessBtn.addEventListener("click", submitGuess);
       answerSquares[i].removeEventListener("click", clicked);
     });
   }
+  fillPlayerList();
+  getNamesAndScoreboardInfo();
 }
