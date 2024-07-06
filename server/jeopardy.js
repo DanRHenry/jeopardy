@@ -12,11 +12,12 @@ const PORT = process.env.PORT || 3300;
 const wss = new WebSocket.Server({ server: server });
 
 wss.on("connection", function connection(ws) {
-  console.log("A new client connected");
 
   ws.send("Welcome new client");
 
-  ws.on("message", (message, isBinary) => {
+  ws.on("message", function incoming(message) {
+    // console.log("received: %s", message);
+    // ws.send("got your message, duder:" + message);
         // Broadcast the message to every connected client
         wss.clients.forEach(function each(client) {
           // Send to All
@@ -28,8 +29,12 @@ wss.on("connection", function connection(ws) {
           }
       })
   });
-  ws.on('close', () => {
-    console.log("connection closed")
+  ws.on('gameInformation', function message(data, isBinary) {
+    wss.clients.forEach(function each(client) {
+      // if (client !== ws && client.readyState === WebSocket.OPEN) {
+        client.send(data, { binary: isBinary });
+      // }
+    });
   })
 });
 

@@ -18,6 +18,7 @@ router.post("/storeQuestion", async (req, res) => {
       answer: req.body.answer,
       category: req.body.category,
       unit: req.body.unit,
+      userEmail: req.body.userEmail,
     }); // using values from req.body to form our object.
 
     const newQuestionInfo = await questionInfo.save();
