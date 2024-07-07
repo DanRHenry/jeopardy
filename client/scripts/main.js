@@ -1728,8 +1728,18 @@ async function roundOne() {
       openTextDisplayWindow(i);
 
       //! This fills in the question (answer) when the box is clicked.
+
+      //todo -- finish this
       const questions = sessionStorage.question;
-      // console.log(questions)
+      let gameQuestions = {}
+      console.log("questions",questions)
+      console.log("gameQuestions",gameQuestions)
+
+      for (let i = 0; i < 5; i++) {
+        gameQuestions[i] = questions.question_[i].split("\r\n");
+      }
+      console.log(gameQuestions)
+      //todo -- finish the above section
       if (round === "round1") {
         // textDispCont.textContent = roundOneArray[i].question;
         textDispCont.textContent = roundOneArray[i].question;
