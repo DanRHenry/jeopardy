@@ -219,7 +219,6 @@ if (document.title === "Student Registration") {
       alert("Please enter your name and email address");
       return;
     }
-    //todo send students either to a waiting room, or add a message onscreen to wait for the game to begin
     studentSigninBtn?.removeEventListener("click", studentSignIn);
     studentSigninBtn.innerText = "Please wait...";
     const waitingMessage = document.createElement("div");
@@ -1730,18 +1729,19 @@ async function roundOne() {
       //! This fills in the question (answer) when the box is clicked.
 
       //todo -- finish this
-      const questions = sessionStorage.question;
+      const questions = JSON.parse(sessionStorage.question);
+      const answers = JSON.parse(sessionStorage.answer);
       let gameQuestions = {}
-      console.log("questions",questions)
-      console.log("gameQuestions",gameQuestions)
+      let gameAnswers = {}
 
       for (let i = 0; i < 5; i++) {
-        gameQuestions[i] = questions.question_[i].split("\r\n");
+        gameQuestions[i] = questions[`question_${i}`].split("\r\n");
+        gameAnswers[i] = answers[`answer_${i}`].split("\r\n");
       }
       console.log(gameQuestions)
+      console.log(gameAnswers)
       //todo -- finish the above section
       if (round === "round1") {
-        // textDispCont.textContent = roundOneArray[i].question;
         textDispCont.textContent = roundOneArray[i].question;
       }
 
