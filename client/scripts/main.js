@@ -69,6 +69,7 @@ if (document.title === "Teacher Login") {
     if (document.getElementById("adminLoginHeader").textContent === "Log In") {
       let email = emailInput.value;
       sessionStorage.setItem("email", `${email}@eastlongmeadowma.gov`);
+      sessionStorage.squaresClicked = "";
       const url = `${apiServer}/user/findAdmin`;
       let signInSignUpObject = JSON.stringify({
         displayName: displayNameInput.value,
@@ -153,6 +154,7 @@ if (document.title === "Student Registration") {
 
   ws.addEventListener("message", (message) => {
     // console.log("message.data:", message.data);
+
     if (message.data == "Welcome new client") {
       console.log(message.data);
       return;
@@ -1357,53 +1359,6 @@ textDisplayBtn?.addEventListener("click", function () {
   hideTextDisplayBtn();
 });
 
-//! --------------------------------------- Open the Clue Window -----------------------
-function openTextDisplayWindow(index) {
-  textDisplay.style.display = "flex";
-  textDisplay.style.border = ".5em solid black";
-  textDisplay.style.borderRadius = "2em";
-  textDisplay.style.height = "clamp(15vh,14em,50vh)";
-  textDisplay.style.width = "60%";
-  textDisplay.style.top = "7em";
-  textDisplay.style.left = "20%";
-  textDisplayBtn.innerText = "Buzz In";
-  setTimeout(() => {
-    textDisplayBtn.style.display = "inline-block";
-    textDisplayBtn.id = "riskBtn"; //todo maybe change this later to remove the id change
-    document.getElementById("riskBtn").addEventListener("click", () => {
-      //todo maybe change this later to remove the id change
-      console.log("click");
-    });
-  }, 200);
-
-  //! --------------------------------- Hide the Clue Window text until the animation finishes -----------------
-  setTimeout(() => {
-    textDisplay.style.color = "white";
-  }, "200");
-
-  //!---------------------------------------------- Timer for Buzzing in ---------------------------------------
-  setTimeout(() => {
-    deactivateButtons();
-    textDisplayBtn.id = "textDisplayBtn"; //todo maybe change this later to remove the id change
-    textDisplayBtn.innerText = "Close";
-    // textDisplayBtn.innerHTML = `<button id="textDisplayBtn">Risk</button>`
-
-    if (round === "round1") {
-      textDispCont.innerText =
-        "Time Up! The Answer Was " + `"${roundOneArray[index].answer}"`;
-    }
-    if (round === "round2") {
-      textDispCont.innerText =
-        "Time Up! The Answer Was " + `"${roundTwoArray[index].answer}"`;
-    }
-    if (round === "final") {
-      textDispCont.innerText =
-        "Time Up! The Answer Was " + `"${finalJeopardyCategory[index].answer}"`;
-    }
-    textDisplayBtn.style.display = "inline-block";
-  }, "5000");
-}
-
 //! ---------------------------------------- Function to Close the Clue Window ----------------------------------
 function closeTextDisplayWindow() {
   textDisplay.style.color = "rgb(92, 107, 160)";
@@ -1543,18 +1498,45 @@ function submitGuess() {
 
 //! Round One Function
 async function roundOne() {
+  const ws = new WebSocket("ws://127.0.0.1:3300");
+
   if (document.title === "Round-1") {
     getNamesAndScoreboardInfo();
 
-    const ws = new WebSocket("ws://127.0.0.1:3300");
-
     ws.addEventListener("message", (message) => {
+      console.log(message.data);
+
       if (message.data === "Welcome new client") {
         return;
       }
-      console.log("pullGameInformationFromStorage.message.data:", message.data);
+
+      //! Gameplay - clicking on an answer square (received by the students only)
+      if (JSON.parse(message.data).coordinates) {
+        // console.log("message.data:", message.data);
+        for (let i = 0; i < JSON.parse(message.data).coordinates.length; i++) {
+          const { row, column } = JSON.parse(message.data).coordinates[i];
+          handleAnswerSquareClicked(row, column);
+        }
+      }
+
+      if (JSON.parse(message.data).position) { //! sent by the teacher
+        if (sessionStorage.token) {
+          let squaresClicked = sessionStorage.squaresClicked;
+          squaresClicked += JSON.parse(message.data).position;
+          sessionStorage.setItem("squaresClicked", squaresClicked);
+          let coordinates = [];
+          for (let i = 0; i < squaresClicked.length; i += 2) {
+            coordinates.push({
+              row: squaresClicked[i],
+              column: squaresClicked[i + 1],
+            });
+            handleAnswerSquareClicked(squaresClicked[i], squaresClicked[i+1])
+          }
+          ws.send(JSON.stringify({ coordinates: coordinates }));
+        }
+      }
+
       if (message.data[0] === "{") {
-        console.log("message.data:", message.data);
         message = JSON.parse(message.data);
         const {
           answer,
@@ -1655,14 +1637,15 @@ async function roundOne() {
       }
 
       //! Change this to the WS object
-      roundOneArray = tempRoundOneArray;
-      console.log("roundOneArray:", roundOneArray);
+      roundOneArray = tempRoundOneArray; // This currently contains the placeholder information
+      // console.log("roundOneArray:", roundOneArray);
 
       //!------------------------------------- Fill in the Answer board --------------------------------------
-      
+
       // displayPlayerTurnMessage();
     });
   }
+
   // First Row
   for (let i = 0; i < 6; i++) {
     if (round === "round1") {
@@ -1670,12 +1653,12 @@ async function roundOne() {
     } else if (round === "round2") {
       answer200.textContent = `$400`;
     }
-    answer200.className = `answer`;
+    answer200.className = `answer_0 answer`;
     answerBoard.appendChild(answer200.cloneNode(true));
   }
   // Second Row
   for (let i = 0; i < 6; i++) {
-    answer400.className = `answer`;
+    answer400.className = `answer_1 answer`;
     if (round === "round1") {
       answer400.textContent = `$400`;
     } else if (round === "round2") {
@@ -1686,7 +1669,7 @@ async function roundOne() {
   // Third Row
   for (let i = 0; i < 6; i++) {
     // answer600.id = `answerBtn${i + 1}`;
-    answer600.className = `answer`;
+    answer600.className = `answer_2 answer`;
     if (round === "round1") {
       answer600.textContent = `$600`;
     } else if (round === "round2") {
@@ -1697,7 +1680,7 @@ async function roundOne() {
   // Fourth Row
   for (let i = 0; i < 6; i++) {
     // answer800.id = `answerBtn${i + 1}`;
-    answer800.className = `answer`;
+    answer800.className = `answer_3 answer`;
     if (round === "round1") {
       answer800.textContent = `$800`;
     } else if (round === "round2") {
@@ -1707,7 +1690,7 @@ async function roundOne() {
   }
   // Fifth Row
   for (let i = 0; i < 6; i++) {
-    answer1000.className = `answer`;
+    answer1000.className = `answer_4 answer`;
     if (round === "round1") {
       answer1000.textContent = `$1000`;
     } else if (round === "round2") {
@@ -1716,40 +1699,131 @@ async function roundOne() {
     answerBoard.appendChild(answer1000.cloneNode(true));
   }
 
-  let answerSquares = document.getElementsByClassName("answer");
-  for (let i = 0; i < answerSquares.length; i++) {
-    answerSquares[i].addEventListener("click", function clicked() {
-      passed = false;
+  const answerBoxes = {};
 
-      let box = answerSquares[i];
-      activateButtons();
-      box.textContent = "";
-      openTextDisplayWindow(i);
+  answerBoxes.answer_0 = document.getElementsByClassName("answer_0");
+  answerBoxes.answer_1 = document.getElementsByClassName("answer_1");
+  answerBoxes.answer_2 = document.getElementsByClassName("answer_2");
+  answerBoxes.answer_3 = document.getElementsByClassName("answer_3");
+  answerBoxes.answer_4 = document.getElementsByClassName("answer_4");
 
-      //! This fills in the question (answer) when the box is clicked.
-
-      //todo -- finish this
-      const questions = JSON.parse(sessionStorage.question);
-      const answers = JSON.parse(sessionStorage.answer);
-      let gameQuestions = {}
-      let gameAnswers = {}
-
-      for (let i = 0; i < 5; i++) {
-        gameQuestions[i] = questions[`question_${i}`].split("\r\n");
-        gameAnswers[i] = answers[`answer_${i}`].split("\r\n");
-      }
-      console.log(gameQuestions)
-      console.log(gameAnswers)
-      //todo -- finish the above section
-      if (round === "round1") {
-        textDispCont.textContent = roundOneArray[i].question;
-      }
-
-      //! When clicked, the guess button calls submitGuess
-      guessBtn.addEventListener("click", submitGuess);
-      answerSquares[i].removeEventListener("click", clicked);
-    });
+  function answerSquareClicked(row, column) {
+    const clickedSpot = { row: row, column: column };
+    ws.send(JSON.stringify(clickedSpot));
+    if (ws) {
+      handleAnswerSquareClicked(row, column);
+    }
   }
+  function handleAnswerSquareClicked(row, column) {
+    let box = answerBoxes[`answer_${row}`][column];
+    if (box.textContent === "") {
+      return;
+    }
+    // console.log(row, column)
+    passed = false;
+
+    activateButtons();
+    if (sessionStorage.token) {
+      sessionStorage.position += `${row}${column}`;
+      ws.send(JSON.stringify({ position: `${sessionStorage.postion}` }));
+    } else if (row != undefined && column != undefined) {
+      console.log(row, column);
+      ws.send(JSON.stringify({ position: `${row}${column}` }));
+    }
+
+    sessionStorage.answerSquares = JSON.stringify({ row: row, column: column });
+
+    box.textContent = "";
+
+    //todo -- change this to get information from a broadcast object, so students who arrive late or leave and return can keep their scoreboards correct
+
+    //todo -- maybe on entering the screen, request an object of the gameboard state from the websocket, and only reply from the teacher that has a token. Now that teachers are also getting the details, they can be stored in a session storage object on the teacher's side.
+
+    //todo -- add logic so if the teacher returns to the admin page, the message is sent to redirect students to a waiting page
+
+    //todo -- finish this
+    //todo -- investigate why this does not correctly parse Second Game
+    const questions = JSON.parse(sessionStorage.question);
+    // console.log("questions_split:", questions[`question_0`].split("\r\n"));
+    const answers = JSON.parse(sessionStorage.answer);
+    // console.log("answers:", answers);
+    let gameQuestions = {};
+    let gameAnswers = {};
+
+    for (let i = 0; i < 6; i++) {
+      // console.log("i:",i)
+      // console.log(gameQuestions)
+      gameQuestions[i] = questions[`question_${i}`].split("\r\n");
+      gameAnswers[i] = answers[`answer_${i}`].split("\r\n");
+    }
+
+    console.log(gameQuestions);
+    console.log(gameAnswers);
+
+    openTextDisplayWindow(gameQuestions, gameAnswers, row, column);
+
+    //todo -- finish the above section
+    if (round === "round1") {
+      textDispCont.textContent = gameQuestions[column][row];
+    }
+    guessBtn.addEventListener("click", submitGuess);
+  }
+
+  for (let i = 0; i < 5; i++) {
+    for (let j = 0; j < 6; j++) {
+      let temp = answerBoxes[`answer_${i}`][j];
+      temp.addEventListener("click", () => answerSquareClicked(i, j));
+    }
+  }
+
   fillPlayerList();
   getNamesAndScoreboardInfo();
+
+  //! --------------------------------------- Open the Clue Window -----------------------
+  function openTextDisplayWindow(gameQuestions, gameAnswers, row, column) {
+    textDisplay.style.display = "flex";
+    textDisplay.style.border = ".5em solid black";
+    textDisplay.style.borderRadius = "2em";
+    textDisplay.style.height = "clamp(15vh,14em,50vh)";
+    textDisplay.style.width = "60%";
+    textDisplay.style.top = "7em";
+    textDisplay.style.left = "20%";
+    textDisplayBtn.innerText = "Buzz In";
+    setTimeout(() => {
+      textDisplayBtn.style.display = "inline-block";
+      textDisplayBtn.id = "riskBtn"; //todo maybe change this later to remove the id change
+      document.getElementById("riskBtn").addEventListener("click", () => {
+        //todo maybe change this later to remove the id change
+        console.log("click");
+      });
+    }, 200);
+
+    //! --------------------------------- Hide the Clue Window text until the animation finishes -----------------
+    setTimeout(() => {
+      textDisplay.style.color = "white";
+    }, "200");
+
+    //!---------------------------------------------- Timer for Buzzing in ---------------------------------------
+    setTimeout(() => {
+      deactivateButtons();
+      textDisplayBtn.id = "textDisplayBtn"; //todo maybe change this later to remove the id change
+      textDisplayBtn.innerText = "Close";
+      // textDisplayBtn.innerHTML = `<button id="textDisplayBtn">Risk</button>`
+
+      if (round === "round1") {
+        // console.log("gameAnswers:",gameAnswers)
+        textDispCont.innerText =
+          "Time Up! The Answer Was " + `"${gameAnswers[column][row]}"`;
+      }
+      if (round === "final") {
+        textDispCont.innerText = "Time Up! The Answer Was " + `"....."`;
+      }
+      textDisplayBtn.style.display = "inline-block";
+    }, "5000");
+  }
 }
+
+//todo -- fix bugs
+/* 
+If the teacher is already signed in, the student isn't getting the first teacher signed in message
+*/
