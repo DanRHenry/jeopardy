@@ -1315,11 +1315,11 @@ function getNamesAndScoreboardInfo() {
 // Notify that it is player 1's turn to choose
 function displayPlayerTurnMessage() {
   // console.log("activePlayer in Display Player Turn Message Function", activePlayer)
-  if (activePlayer[activePlayer.length - 1] === "s") {
-    playerTurn.innerText = `${activePlayer}' turn. Pick an Answer!`;
-  } else {
-    playerTurn.innerText = `${activePlayer}'s turn. Pick an Answer!`;
-  }
+  // if (activePlayer[activePlayer.length - 1] === "s") {
+  //   playerTurn.innerText = `${activePlayer}' turn. Pick an Answer!`;
+  // } else {
+  //   playerTurn.innerText = `${activePlayer}'s turn. Pick an Answer!`;
+  // }
 }
 
 // Switch Players
@@ -1361,9 +1361,9 @@ textDisplayBtn?.addEventListener("click", function () {
     ws.close();
   });
   closeTextDisplayWindow();
-  declareQuestionWinOrLose();
-  deactivateButtons();
-  hideTextDisplayBtn();
+  // declareQuestionWinOrLose();
+  // deactivateButtons();
+  // hideTextDisplayBtn();
 });
 
 //! ---------------------------------------- Function to Close the Clue Window ----------------------------------
@@ -1422,14 +1422,12 @@ const correct = () => {
   deactivateButtons();
 };
 
-const incorrect = () => {
+const incorrect = (gameQuestions, gameAnswers, row, column) => {
   playerGuess = "";
   let pointsAvailable;
   if (round === "round1") {
-    pointsAvailable = roundOneArray[index].score * -1;
-  }
-  if (round === "round2") {
-    pointsAvailable = roundTwoArray[index].score * -1;
+    console.log("wrong!")
+    // pointsAvailable = roundOneArray[index].score * -1;
   }
   if (round === "final") {
     console.log("implement this later");
@@ -1441,17 +1439,12 @@ const incorrect = () => {
     console.log("activePlayerScore:", activePlayerScore);
     passed = true;
     textDispCont.textContent = `Wrong answer. ${activePlayer}, would you like to play?`;
-    p1Score.textContent = player1Score;
-    p2Score.textContent = player2Score;
+    // p1Score.textContent = player1Score;
+    // p2Score.textContent = player2Score;
     // passed = true;
     if (round === "round1") {
       setTimeout(() => {
-        textDispCont.textContent = roundOneArray[index].question;
-      }, 2000);
-    }
-    if (round === "round2") {
-      setTimeout(() => {
-        textDispCont.textContent = roundTwoArray[index].question;
+        textDispCont.textContent = gameQuestions[column][row];
       }, 2000);
     }
     if (round === "final") {
@@ -1466,8 +1459,8 @@ const incorrect = () => {
     // activePlayerScore = 0;
     setActivePlayerScore(pointsAvailable);
     textDispCont.textContent = `I'm sorry, ${activePlayer} that's the wrong answer.`;
-    p1Score.textContent = player1Score;
-    p2Score.textContent = player2Score;
+    // p1Score.textContent = player1Score;
+    // p2Score.textContent = player2Score;
     switchPlayer();
     setTimeout(() => {
       // textDisplay.style.display = "none";
@@ -1478,7 +1471,7 @@ const incorrect = () => {
   }
 };
 
-function submitGuess() {
+function submitGuess(gameQuestions, gameAnswers, row, column) {
   // Set the playerGuess Variable
   console.log("hello?")
   playerGuess = inputFieldForAnswer.value;
@@ -1490,17 +1483,19 @@ function submitGuess() {
   if (round === "round1") {
     const ws = new WebSocket("ws://127.0.0.1:3300");
     ws.addEventListener("open", () => {
-      ws.close();
-    if (
-      roundOneArray[index].answer.toLowerCase() === playerGuess.toLowerCase()
+      // ws.close();
+    if (//todo change roundOneArray[index].answer to gameAnswers[column][row]
+
+      gameAnswers[column][row].toLowerCase() === playerGuess.toLowerCase()
     ) {
       ws.send("answered correctly");
       win = true;
       correct();
     } else {
-      ws.send("")
+      const answerObject = {"wrongAnswerInformation": {win: false, "gameQuestions": gameQuestions, "gameAnswers":gameAnswers, "gameQuestions":gameQuestions, "row":row, "column":column}}
+      ws.send(JSON.stringify(answerObject))
       win = false;
-      incorrect();
+      incorrect(gameQuestions, gameAnswers, row, column);
     }
   });
   }
@@ -1542,9 +1537,9 @@ async function roundOne() {
       }
 
       if (message.data === "CloseTextDisplayWindow") {
-        closeTextDisplayWindow(); // 
-        deactivateButtons();
-        hideTextDisplayBtn();
+        closeTextDisplayWindow();  
+        // deactivateButtons();
+        // hideTextDisplayBtn();
         // console.log("message.data:", message.data);
         return;
       }
@@ -1554,12 +1549,20 @@ async function roundOne() {
         correct();
         return;
       }
+      // console.log("message.data:",message.data)
 
-      if (message.data === "answered incorrectly") {
+      // if (JSON.parse(message.data)["wrongAnswerInformation"]) {
+      //   console.log("hello message wrong")
+      // }
+
+      if (JSON.parse(message.data)["wrongAnswerInformation"]) {
+        console.log("wrongobject:",message.data)
+        const {gameQuestions, gameAnswers, row, column} = JSON.parse(message.data)["wrongAnswerInformation"]
         win = false;
-        incorrect();
+        incorrect(gameQuestions, gameAnswers, row, column);
         return;
       }
+
       // console.log('message.data:',message.data)
       if (JSON.parse(message.data).activeQuestion) {
         // console.log(
@@ -1835,7 +1838,9 @@ async function roundOne() {
       );
       textDispCont.textContent = gameQuestions[column][row];
     }
-    guessBtn.addEventListener("click", submitGuess);
+    guessBtn.addEventListener("click", () => {
+      submitGuess(gameQuestions, gameAnswers, row, column)
+    });
   }
 
   for (let i = 0; i < 5; i++) {
