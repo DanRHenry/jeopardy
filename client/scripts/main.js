@@ -1266,6 +1266,7 @@ function hideTextDisplayBtn() {
 
 // Enable the pass and guess buttons / disable the placeholder pass and guess buttons
 function activateButtons() {
+  console.log("activating Buttons:")
   placeholderGuessBtn.style.display = "none";
   guessBtn.style.display = "inline-block";
   placeholderPassBtn.style.display = "none";
@@ -1354,7 +1355,13 @@ function setActivePlayerScore(pointsAvailable) {
 }
 
 textDisplayBtn?.addEventListener("click", function () {
+  const ws = new WebSocket("ws://127.0.0.1:3300");
+  ws.addEventListener("open", () => {
+    ws.send("CloseTextDisplayWindow");
+    ws.close();
+  });
   closeTextDisplayWindow();
+  declareQuestionWinOrLose();
   deactivateButtons();
   hideTextDisplayBtn();
 });
@@ -1368,22 +1375,30 @@ function closeTextDisplayWindow() {
   textDisplay.style.left = "50%";
   textDisplay.style.borderRadius = "0";
   textDisplay.style.border = "0";
-  if (win === false) {
-    // passed = false;
-    // win = undefined;
-    console.log("playerOnesName:", playerOnesName);
-    console.log("playerTwosName", playerTwosName);
 
-    if (activePlayer == playerOnesName) {
-      activePlayer = playerTwosName;
-    } else {
-      activePlayer = playerOnesName;
-    }
-    displayPlayerTurnMessage();
-    console.log("activePlayer", activePlayer);
-  }
 }
 
+function declareQuestionWinOrLose() {
+    if (win === false) {
+    console.log("answered incorrectly")
+    // passed = false;
+    // win = undefined;
+    // console.log("playerOnesName:", playerOnesName);
+    // console.log("playerTwosName", playerTwosName);
+
+    // if (activePlayer == playerOnesName) {
+    //   activePlayer = playerTwosName;
+    // } else {
+    //   activePlayer = playerOnesName;
+    // }
+    // displayPlayerTurnMessage();
+    // console.log("activePlayer", activePlayer);
+  }
+  if (win === true)
+    {
+      console.log("answered correctly")
+    }
+}
 //!----------------------------------------- Correct / Incorrect Functions -----------------------------------------
 
 const correct = () => {
@@ -1465,6 +1480,7 @@ const incorrect = () => {
 
 function submitGuess() {
   // Set the playerGuess Variable
+  console.log("hello?")
   playerGuess = inputFieldForAnswer.value;
 
   // Clear the input field
@@ -1472,15 +1488,21 @@ function submitGuess() {
 
   // Check the Round
   if (round === "round1") {
+    const ws = new WebSocket("ws://127.0.0.1:3300");
+    ws.addEventListener("open", () => {
+      ws.close();
     if (
       roundOneArray[index].answer.toLowerCase() === playerGuess.toLowerCase()
     ) {
+      ws.send("answered correctly");
       win = true;
       correct();
     } else {
+      ws.send("")
       win = false;
       incorrect();
     }
+  });
   }
 
   if (round === "final") {
@@ -1503,11 +1525,48 @@ async function roundOne() {
   if (document.title === "Round-1") {
     getNamesAndScoreboardInfo();
 
+    //todo -- add a request for information on the clicked answer squares, and a response from the teacher if there have been any clicked
+
+    //todo -- dissable clicking squares for the teacher
+    //todo -- maybe color the teacher's background differently
+
+    //todo -- add a check to disallow duplicate usernames/emails to join the game
+
+    //todo -- teacher might be able to override right or wrong answers. Maybe change the process from automated results to teacher-approved results
+
     ws.addEventListener("message", (message) => {
-      console.log(message.data);
+      // console.log(message.data);
 
       if (message.data === "Welcome new client") {
         return;
+      }
+
+      if (message.data === "CloseTextDisplayWindow") {
+        closeTextDisplayWindow(); // 
+        deactivateButtons();
+        hideTextDisplayBtn();
+        // console.log("message.data:", message.data);
+        return;
+      }
+
+      if (message.data === "answered correctly") {
+        win = true;
+        correct();
+        return;
+      }
+
+      if (message.data === "answered incorrectly") {
+        win = false;
+        incorrect();
+        return;
+      }
+      // console.log('message.data:',message.data)
+      if (JSON.parse(message.data).activeQuestion) {
+        // console.log(
+        //   "activeQuestion:",
+        //   JSON.parse(message.data).activeQuestion[0]
+        // );
+        textDispCont.textContent = JSON.parse(message.data).activeQuestion[0]; // 0 for question,1 for answer
       }
 
       //! Gameplay - clicking on an answer square (received by the students only)
@@ -1519,7 +1578,8 @@ async function roundOne() {
         }
       }
 
-      if (JSON.parse(message.data).position) { //! sent by the teacher
+      if (JSON.parse(message.data).position) {
+        //! sent by the teacher
         if (sessionStorage.token) {
           let squaresClicked = sessionStorage.squaresClicked;
           squaresClicked += JSON.parse(message.data).position;
@@ -1530,7 +1590,7 @@ async function roundOne() {
               row: squaresClicked[i],
               column: squaresClicked[i + 1],
             });
-            handleAnswerSquareClicked(squaresClicked[i], squaresClicked[i+1])
+            handleAnswerSquareClicked(squaresClicked[i], squaresClicked[i + 1]);
           }
           ws.send(JSON.stringify({ coordinates: coordinates }));
         }
@@ -1715,6 +1775,7 @@ async function roundOne() {
     }
   }
   function handleAnswerSquareClicked(row, column) {
+    // console.log("row:",row,"column:",column)
     let box = answerBoxes[`answer_${row}`][column];
     if (box.textContent === "") {
       return;
@@ -1727,7 +1788,7 @@ async function roundOne() {
       sessionStorage.position += `${row}${column}`;
       ws.send(JSON.stringify({ position: `${sessionStorage.postion}` }));
     } else if (row != undefined && column != undefined) {
-      console.log(row, column);
+      // console.log(row, column);
       ws.send(JSON.stringify({ position: `${row}${column}` }));
     }
 
@@ -1757,13 +1818,21 @@ async function roundOne() {
       gameAnswers[i] = answers[`answer_${i}`].split("\r\n");
     }
 
-    console.log(gameQuestions);
-    console.log(gameAnswers);
+    // console.log(gameQuestions);
+    // console.log(gameAnswers);
 
     openTextDisplayWindow(gameQuestions, gameAnswers, row, column);
 
     //todo -- finish the above section
     if (round === "round1") {
+      ws.send(
+        JSON.stringify({
+          activeQuestion: [
+            gameQuestions[column][row],
+            gameAnswers[column][row],
+          ],
+        })
+      );
       textDispCont.textContent = gameQuestions[column][row];
     }
     guessBtn.addEventListener("click", submitGuess);
@@ -1771,6 +1840,7 @@ async function roundOne() {
 
   for (let i = 0; i < 5; i++) {
     for (let j = 0; j < 6; j++) {
+      // console.log("i:",i,"j:",j)
       let temp = answerBoxes[`answer_${i}`][j];
       temp.addEventListener("click", () => answerSquareClicked(i, j));
     }
@@ -1793,8 +1863,11 @@ async function roundOne() {
       textDisplayBtn.style.display = "inline-block";
       textDisplayBtn.id = "riskBtn"; //todo maybe change this later to remove the id change
       document.getElementById("riskBtn").addEventListener("click", () => {
-        //todo maybe change this later to remove the id change
-        console.log("click");
+        closeTextDisplayWindow();
+        console.log("guessing");
+        activateButtons();
+
+        //todo -- guessBtn event listener
       });
     }, 200);
 
@@ -1804,26 +1877,23 @@ async function roundOne() {
     }, "200");
 
     //!---------------------------------------------- Timer for Buzzing in ---------------------------------------
-    setTimeout(() => {
-      deactivateButtons();
-      textDisplayBtn.id = "textDisplayBtn"; //todo maybe change this later to remove the id change
-      textDisplayBtn.innerText = "Close";
-      // textDisplayBtn.innerHTML = `<button id="textDisplayBtn">Risk</button>`
+    // setTimeout(() => {
+    //   deactivateButtons();
+    //   textDisplayBtn.id = "textDisplayBtn"; //todo maybe change this later to remove the id change
+    //   textDisplayBtn.innerText = "Close";
+    //   // textDisplayBtn.innerHTML = `<button id="textDisplayBtn">Risk</button>`
 
-      if (round === "round1") {
-        // console.log("gameAnswers:",gameAnswers)
-        textDispCont.innerText =
-          "Time Up! The Answer Was " + `"${gameAnswers[column][row]}"`;
-      }
-      if (round === "final") {
-        textDispCont.innerText = "Time Up! The Answer Was " + `"....."`;
-      }
-      textDisplayBtn.style.display = "inline-block";
-    }, "5000");
+    //   if (round === "round1") {
+    //     // console.log("gameAnswers:",gameAnswers)
+    //     textDispCont.innerText =
+    //       "Time Up! The Answer Was " + `"${gameAnswers[column][row]}"`;
+    //   }
+    //   if (round === "final") {
+    //     textDispCont.innerText = "Time Up! The Answer Was " + `"....."`;
+    //   }
+    //   textDisplayBtn.style.display = "inline-block";
+    // }, "5000");
   }
 }
 
-//todo -- fix bugs
-/* 
-If the teacher is already signed in, the student isn't getting the first teacher signed in message
-*/
+//TODO -- fix bug -- If the teacher is already signed in, the student isn't getting the first teacher signed in message
