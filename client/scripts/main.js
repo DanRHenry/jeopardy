@@ -180,10 +180,6 @@ if (document.title === "Student Registration") {
       playerList,
       playerSignupObject,
     } = gameInformation;
-    // } = message.data;
-    // console.log("answer:", answer)
-    // console.log("question:", question)
-    // console.log("className", className)
     sessionStorage.answer = `${answer}`;
     sessionStorage.category = `${category}`;
     sessionStorage.question = `${question}`;
@@ -220,7 +216,7 @@ if (document.title === "Student Registration") {
     waitingMessage.innerText = "Waiting for game to start...";
     document.getElementsByTagName("body")[0].append(waitingMessage);
 
-    sessionStorage.name = studentNameField.value
+    sessionStorage.name = studentNameField.value;
     let playerSignupObject = JSON.stringify({
       studentName: studentNameField.value,
       //todo change this to add logic to check if the input has the @eastlongmeadowma or not
@@ -322,7 +318,7 @@ let customCategories = {};
 let customQuestions = {};
 let customAnswers = {};
 let currentGame = {};
-let scoreObject = {0: 200, 1: 400, 2: 600, 3: 800, 4:1000}
+let scoreObject = { 0: 200, 1: 400, 2: 600, 3: 800, 4: 1000 };
 // --------------------------------------------------- Global Strings -----------------------------------------------------------
 let customGameName = "";
 const addedCategoriesDefaultHTML = `\n <h1>Gameplay Categories:</h1><ol id="tempCategories"></ol>\n`;
@@ -1306,13 +1302,28 @@ function getNamesAndScoreboardInfo() {
   // activePlayer = playerOnesName;
 }
 
+function activePlayerGuessing(activePlayer) {
+  playerTurn.innerText = `${activePlayer} is answering...`;
+}
+
 // Notify that it is player 1's turn to choose
-function displayPlayerTurnMessage(activePlayer) {
-  // console.log("activePlayer in Display Player Turn Message Function", activePlayer)
-  if (activePlayer[activePlayer.length - 1] === "s") {
-    playerTurn.innerText = `${activePlayer}' turn. Pick an Answer!`;
-  } else {
-    playerTurn.innerText = `${activePlayer}'s turn. Pick an Answer!`;
+function displayPlayerTimerMessage(activePlayer, numberOfSeconds) {
+  document.querySelector(".r1").style.backgroundColor = "rgb(39, 84, 84)"
+  playerTurn.innerText = `${activePlayer}, you have ${numberOfSeconds} seconds to answer.`;
+
+  if (numberOfSeconds >= 0) {
+    setTimeout(() => {
+      playerTurn.innerText = `${activePlayer}, you have ${numberOfSeconds} seconds to answer.`;
+      numberOfSeconds--;
+      displayPlayerTimerMessage(activePlayer, numberOfSeconds);
+    }, 1000);
+  }
+  //todo -- add logic to handle correct guess here, remember to change the timeout to be able to cancel it
+  //todo -- also remember to disable the ability for the user to click on the answerboard if the answer is wrong or the countdown is done
+  //todo -- this could just come as a blanket reenabling of answer boxes once the correct answer has been entered, or once the timeout has been reached to answer at all
+  if (numberOfSeconds < 0) {
+    playerTurn.innerText = `I'm sorry, ${activePlayer}, you ran out of time to answer.`;
+    document.querySelector(".r1").style.backgroundColor = "rgb(59, 127, 127)"
   }
 }
 
@@ -1482,18 +1493,18 @@ function submitGuess(gameQuestions, gameAnswers, row, column) {
         gameAnswers: gameAnswers,
         row: row,
         column: column,
-      }
+      };
       if (
         gameAnswers[column][row].toLowerCase() === playerGuess.toLowerCase()
       ) {
-        ws.send(JSON.stringify({'answered correctly': answerObject}));
+        ws.send(JSON.stringify({ "answered correctly": answerObject }));
         win = true;
         correct(gameQuestions, gameAnswers, row, column);
       } else {
         const answerObject = {
-          wrongAnswerInformation: answerObject
+          wrongAnswerInformation: answerObject,
         };
-        ws.send(JSON.stringify({"wrongAnswerInformation": answerObject}));
+        ws.send(JSON.stringify({ wrongAnswerInformation: answerObject }));
         win = false;
         incorrect(gameQuestions, gameAnswers, row, column);
       }
@@ -1545,20 +1556,19 @@ async function roundOne() {
       }
 
       if (JSON.parse(message.data)["answered correctly"]) {
-        const {gameQuestions, gameAnswers, row, column} = JSON.parse(message.data)["answered correctly"]
+        const { gameQuestions, gameAnswers, row, column } = JSON.parse(
+          message.data
+        )["answered correctly"];
         win = true;
         correct(gameQuestions, gameAnswers, row, column);
         return;
       }
-      // console.log("message.data:",message.data)
-
-      // if (JSON.parse(message.data)["wrongAnswerInformation"]) {
-      //   console.log("hello message wrong")
-      // }
 
       if (JSON.parse(message.data)["activePlayer"]) {
-        displayPlayerTurnMessage(JSON.parse(message.data).activePlayer)
+        activePlayerGuessing(JSON.parse(message.data).activePlayer);
+        // displayPlayerTurnMessage(JSON.parse(message.data).activePlayer)
       }
+
       if (JSON.parse(message.data)["wrongAnswerInformation"]) {
         // console.log("wrongobject:", message.data);
         const { gameQuestions, gameAnswers, row, column } = JSON.parse(
@@ -1571,11 +1581,7 @@ async function roundOne() {
 
       // console.log('message.data:',message.data)
       if (JSON.parse(message.data).activeQuestion) {
-        // console.log(
-        //   "activeQuestion:",
-        //   JSON.parse(message.data).activeQuestion[0]
-        // );
-        textDispCont.textContent = JSON.parse(message.data).activeQuestion[0]; // 0 for question,1 for answer
+        textDispCont.textContent = JSON.parse(message.data).activeQuestion[0];
       }
 
       //! Gameplay - clicking on an answer square (received by the students only)
@@ -1878,9 +1884,9 @@ async function roundOne() {
       document.getElementById("riskBtn").addEventListener("click", () => {
         // closeTextDisplayWindow();
         // console.log(sessionStorage.name)
-        ws.send(JSON.stringify({'activePlayer': sessionStorage.name}))
-        displayPlayerTurnMessage(sessionStorage.name)
-        console.log("guessing");
+        ws.send(JSON.stringify({ activePlayer: sessionStorage.name }));
+        let numberOfSeconds = 3;
+        displayPlayerTimerMessage(sessionStorage.name, numberOfSeconds);
         activateButtons();
 
         //todo -- guessBtn event listener
