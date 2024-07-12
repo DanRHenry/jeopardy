@@ -1266,7 +1266,7 @@ function hideTextDisplayBtn() {
 
 // Enable the pass and guess buttons / disable the placeholder pass and guess buttons
 function activateButtons() {
-  console.log("activating Buttons:")
+  console.log("activating Buttons:");
   placeholderGuessBtn.style.display = "none";
   guessBtn.style.display = "inline-block";
   placeholderPassBtn.style.display = "none";
@@ -1355,12 +1355,8 @@ function setActivePlayerScore(pointsAvailable) {
 }
 
 textDisplayBtn?.addEventListener("click", function () {
-  const ws = new WebSocket("ws://127.0.0.1:3300");
-  ws.addEventListener("open", () => {
-    ws.send("CloseTextDisplayWindow");
-    ws.close();
-  });
-  closeTextDisplayWindow();
+  wsCloseTextDisplayWindow();
+  // closeTextDisplayWindow();
   // declareQuestionWinOrLose();
   // deactivateButtons();
   // hideTextDisplayBtn();
@@ -1375,12 +1371,19 @@ function closeTextDisplayWindow() {
   textDisplay.style.left = "50%";
   textDisplay.style.borderRadius = "0";
   textDisplay.style.border = "0";
+}
 
+function wsCloseTextDisplayWindow() {
+  const ws = new WebSocket("ws://127.0.0.1:3300");
+  ws.addEventListener("open", () => {
+    ws.send("wsCloseTextDisplayWindow");
+    ws.close();
+  });
 }
 
 function declareQuestionWinOrLose() {
-    if (win === false) {
-    console.log("answered incorrectly")
+  if (win === false) {
+    console.log("answered incorrectly");
     // passed = false;
     // win = undefined;
     // console.log("playerOnesName:", playerOnesName);
@@ -1394,10 +1397,9 @@ function declareQuestionWinOrLose() {
     // displayPlayerTurnMessage();
     // console.log("activePlayer", activePlayer);
   }
-  if (win === true)
-    {
-      console.log("answered correctly")
-    }
+  if (win === true) {
+    console.log("answered correctly");
+  }
 }
 //!----------------------------------------- Correct / Incorrect Functions -----------------------------------------
 
@@ -1426,7 +1428,7 @@ const incorrect = (gameQuestions, gameAnswers, row, column) => {
   playerGuess = "";
   let pointsAvailable;
   if (round === "round1") {
-    console.log("wrong!")
+    console.log("wrong!");
     // pointsAvailable = roundOneArray[index].score * -1;
   }
   if (round === "final") {
@@ -1473,7 +1475,7 @@ const incorrect = (gameQuestions, gameAnswers, row, column) => {
 
 function submitGuess(gameQuestions, gameAnswers, row, column) {
   // Set the playerGuess Variable
-  console.log("hello?")
+  console.log("hello?");
   playerGuess = inputFieldForAnswer.value;
 
   // Clear the input field
@@ -1484,20 +1486,30 @@ function submitGuess(gameQuestions, gameAnswers, row, column) {
     const ws = new WebSocket("ws://127.0.0.1:3300");
     ws.addEventListener("open", () => {
       // ws.close();
-    if (//todo change roundOneArray[index].answer to gameAnswers[column][row]
+      if (
+        //todo change roundOneArray[index].answer to gameAnswers[column][row]
 
-      gameAnswers[column][row].toLowerCase() === playerGuess.toLowerCase()
-    ) {
-      ws.send("answered correctly");
-      win = true;
-      correct();
-    } else {
-      const answerObject = {"wrongAnswerInformation": {win: false, "gameQuestions": gameQuestions, "gameAnswers":gameAnswers, "gameQuestions":gameQuestions, "row":row, "column":column}}
-      ws.send(JSON.stringify(answerObject))
-      win = false;
-      incorrect(gameQuestions, gameAnswers, row, column);
-    }
-  });
+        gameAnswers[column][row].toLowerCase() === playerGuess.toLowerCase()
+      ) {
+        ws.send("answered correctly");
+        win = true;
+        correct();
+      } else {
+        const answerObject = {
+          wrongAnswerInformation: {
+            win: false,
+            gameQuestions: gameQuestions,
+            gameAnswers: gameAnswers,
+            gameQuestions: gameQuestions,
+            row: row,
+            column: column,
+          },
+        };
+        ws.send(JSON.stringify(answerObject));
+        win = false;
+        incorrect(gameQuestions, gameAnswers, row, column);
+      }
+    });
   }
 
   if (round === "final") {
@@ -1536,8 +1548,8 @@ async function roundOne() {
         return;
       }
 
-      if (message.data === "CloseTextDisplayWindow") {
-        closeTextDisplayWindow();  
+      if (message.data === "wsCloseTextDisplayWindow") {
+        closeTextDisplayWindow();
         // deactivateButtons();
         // hideTextDisplayBtn();
         // console.log("message.data:", message.data);
@@ -1556,8 +1568,10 @@ async function roundOne() {
       // }
 
       if (JSON.parse(message.data)["wrongAnswerInformation"]) {
-        console.log("wrongobject:",message.data)
-        const {gameQuestions, gameAnswers, row, column} = JSON.parse(message.data)["wrongAnswerInformation"]
+        // console.log("wrongobject:", message.data);
+        const { gameQuestions, gameAnswers, row, column } = JSON.parse(
+          message.data
+        )["wrongAnswerInformation"];
         win = false;
         incorrect(gameQuestions, gameAnswers, row, column);
         return;
@@ -1787,9 +1801,10 @@ async function roundOne() {
     passed = false;
 
     activateButtons();
+
     if (sessionStorage.token) {
       sessionStorage.position += `${row}${column}`;
-      ws.send(JSON.stringify({ position: `${sessionStorage.postion}` }));
+      ws.send(JSON.stringify({ position: `${sessionStorage.position}` }));
     } else if (row != undefined && column != undefined) {
       // console.log(row, column);
       ws.send(JSON.stringify({ position: `${row}${column}` }));
@@ -1839,7 +1854,7 @@ async function roundOne() {
       textDispCont.textContent = gameQuestions[column][row];
     }
     guessBtn.addEventListener("click", () => {
-      submitGuess(gameQuestions, gameAnswers, row, column)
+      submitGuess(gameQuestions, gameAnswers, row, column);
     });
   }
 
@@ -1868,7 +1883,7 @@ async function roundOne() {
       textDisplayBtn.style.display = "inline-block";
       textDisplayBtn.id = "riskBtn"; //todo maybe change this later to remove the id change
       document.getElementById("riskBtn").addEventListener("click", () => {
-        closeTextDisplayWindow();
+        // closeTextDisplayWindow();
         console.log("guessing");
         activateButtons();
 
