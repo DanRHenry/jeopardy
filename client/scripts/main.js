@@ -169,13 +169,6 @@ if (document.title === "Student Registration") {
       return;
     }
 
-    // if (!message.data === "Welcome new client") {
-    //   alert(JSON.stringify(message.data));
-    //   return;
-    // }
-    // message = JSON.parse(message.data)
-    // console.log("message.data:", message.data)
-    // console.log("message.answer:", message.answer)
     let gameInformation = JSON.parse(message.data);
     const {
       answer,
@@ -227,6 +220,7 @@ if (document.title === "Student Registration") {
     waitingMessage.innerText = "Waiting for game to start...";
     document.getElementsByTagName("body")[0].append(waitingMessage);
 
+    sessionStorage.name = studentNameField.value
     let playerSignupObject = JSON.stringify({
       studentName: studentNameField.value,
       //todo change this to add logic to check if the input has the @eastlongmeadowma or not
@@ -328,7 +322,7 @@ let customCategories = {};
 let customQuestions = {};
 let customAnswers = {};
 let currentGame = {};
-
+let scoreObject = {0: 200, 1: 400, 2: 600, 3: 800, 4:1000}
 // --------------------------------------------------- Global Strings -----------------------------------------------------------
 let customGameName = "";
 const addedCategoriesDefaultHTML = `\n <h1>Gameplay Categories:</h1><ol id="tempCategories"></ol>\n`;
@@ -1232,12 +1226,12 @@ passBtn?.addEventListener("click", function listener() {
   if (passed == undefined || passed == false) {
     console.log("passed value:", passed);
     console.log("I'll Pass Thank you");
-    switchPlayer();
+    // switchPlayer();
     // displayPlayerTurnMessage();
     passed = true;
     console.log("passed value:", passed);
   } else {
-    switchPlayer();
+    // switchPlayer();
     console.log("can't pass anymore");
     console.log("passed value:", passed);
     // Change to close the window and the question.
@@ -1313,32 +1307,32 @@ function getNamesAndScoreboardInfo() {
 }
 
 // Notify that it is player 1's turn to choose
-function displayPlayerTurnMessage() {
+function displayPlayerTurnMessage(activePlayer) {
   // console.log("activePlayer in Display Player Turn Message Function", activePlayer)
-  // if (activePlayer[activePlayer.length - 1] === "s") {
-  //   playerTurn.innerText = `${activePlayer}' turn. Pick an Answer!`;
-  // } else {
-  //   playerTurn.innerText = `${activePlayer}'s turn. Pick an Answer!`;
-  // }
+  if (activePlayer[activePlayer.length - 1] === "s") {
+    playerTurn.innerText = `${activePlayer}' turn. Pick an Answer!`;
+  } else {
+    playerTurn.innerText = `${activePlayer}'s turn. Pick an Answer!`;
+  }
 }
 
 // Switch Players
-function switchPlayer() {
-  // if (passed === true) {
-  //   // passed = false;
-  // } else if (activePlayer == playerOnesName) {
-  //   activePlayer = playerTwosName;
-  //   activePlayerScore = player2Score;
-  //   console.log("Player's turn:", activePlayer);
-  //   win = null;
-  // } else if (activePlayer == playerTwosName) {
-  //   activePlayer = playerOnesName;
-  //   activePlayerScore = player1Score;
-  //   console.log("Player's turn:", activePlayer);
-  //   win = null;
-  // }
-  displayPlayerTurnMessage();
-}
+// function switchPlayer() {
+//   // if (passed === true) {
+//   //   // passed = false;
+//   // } else if (activePlayer == playerOnesName) {
+//   //   activePlayer = playerTwosName;
+//   //   activePlayerScore = player2Score;
+//   //   console.log("Player's turn:", activePlayer);
+//   //   win = null;
+//   // } else if (activePlayer == playerTwosName) {
+//   //   activePlayer = playerOnesName;
+//   //   activePlayerScore = player1Score;
+//   //   console.log("Player's turn:", activePlayer);
+//   //   win = null;
+//   // }
+//   displayPlayerTurnMessage();
+// }
 
 function setActivePlayerScore(pointsAvailable) {
   // if (activePlayer === playerOnesName) {
@@ -1403,16 +1397,13 @@ function declareQuestionWinOrLose() {
 }
 //!----------------------------------------- Correct / Incorrect Functions -----------------------------------------
 
-const correct = () => {
+const correct = (gameQuestions, gameAnswers, row, column) => {
   playerGuess = "";
   textDispCont.textContent = `Congratulations ${activePlayer}, you answered correctly!`;
   textDisplayBtn.style.display = "inline-block";
   let pointsAvailable;
   if (round === "round1") {
-    pointsAvailable = roundOneArray[index].score;
-  }
-  if (round === "round2") {
-    pointsAvailable = roundTwoArray[index].score;
+    pointsAvailable = scoreObject.row;
   }
   if (round === "final") {
     console.log("implement this later");
@@ -1428,8 +1419,8 @@ const incorrect = (gameQuestions, gameAnswers, row, column) => {
   playerGuess = "";
   let pointsAvailable;
   if (round === "round1") {
-    console.log("wrong!");
-    // pointsAvailable = roundOneArray[index].score * -1;
+    // console.log("wrong!");
+    pointsAvailable = scoreObject.row * -1;
   }
   if (round === "final") {
     console.log("implement this later");
@@ -1437,7 +1428,7 @@ const incorrect = (gameQuestions, gameAnswers, row, column) => {
   if (passed == false || passed == undefined) {
     // activePlayerScore = 0;
     setActivePlayerScore(pointsAvailable);
-    switchPlayer();
+    // switchPlayer();
     console.log("activePlayerScore:", activePlayerScore);
     passed = true;
     textDispCont.textContent = `Wrong answer. ${activePlayer}, would you like to play?`;
@@ -1463,7 +1454,7 @@ const incorrect = (gameQuestions, gameAnswers, row, column) => {
     textDispCont.textContent = `I'm sorry, ${activePlayer} that's the wrong answer.`;
     // p1Score.textContent = player1Score;
     // p2Score.textContent = player2Score;
-    switchPlayer();
+    // switchPlayer();
     setTimeout(() => {
       // textDisplay.style.display = "none";
       closeTextDisplayWindow();
@@ -1486,26 +1477,23 @@ function submitGuess(gameQuestions, gameAnswers, row, column) {
     const ws = new WebSocket("ws://127.0.0.1:3300");
     ws.addEventListener("open", () => {
       // ws.close();
+      const answerObject = {
+        gameQuestions: gameQuestions,
+        gameAnswers: gameAnswers,
+        row: row,
+        column: column,
+      }
       if (
-        //todo change roundOneArray[index].answer to gameAnswers[column][row]
-
         gameAnswers[column][row].toLowerCase() === playerGuess.toLowerCase()
       ) {
-        ws.send("answered correctly");
+        ws.send(JSON.stringify({'answered correctly': answerObject}));
         win = true;
-        correct();
+        correct(gameQuestions, gameAnswers, row, column);
       } else {
         const answerObject = {
-          wrongAnswerInformation: {
-            win: false,
-            gameQuestions: gameQuestions,
-            gameAnswers: gameAnswers,
-            gameQuestions: gameQuestions,
-            row: row,
-            column: column,
-          },
+          wrongAnswerInformation: answerObject
         };
-        ws.send(JSON.stringify(answerObject));
+        ws.send(JSON.stringify({"wrongAnswerInformation": answerObject}));
         win = false;
         incorrect(gameQuestions, gameAnswers, row, column);
       }
@@ -1556,9 +1544,10 @@ async function roundOne() {
         return;
       }
 
-      if (message.data === "answered correctly") {
+      if (JSON.parse(message.data)["answered correctly"]) {
+        const {gameQuestions, gameAnswers, row, column} = JSON.parse(message.data)["answered correctly"]
         win = true;
-        correct();
+        correct(gameQuestions, gameAnswers, row, column);
         return;
       }
       // console.log("message.data:",message.data)
@@ -1567,6 +1556,9 @@ async function roundOne() {
       //   console.log("hello message wrong")
       // }
 
+      if (JSON.parse(message.data)["activePlayer"]) {
+        displayPlayerTurnMessage(JSON.parse(message.data).activePlayer)
+      }
       if (JSON.parse(message.data)["wrongAnswerInformation"]) {
         // console.log("wrongobject:", message.data);
         const { gameQuestions, gameAnswers, row, column } = JSON.parse(
@@ -1862,6 +1854,7 @@ async function roundOne() {
     for (let j = 0; j < 6; j++) {
       // console.log("i:",i,"j:",j)
       let temp = answerBoxes[`answer_${i}`][j];
+      // temp.addEventListener("click", () => console.log(i, j));
       temp.addEventListener("click", () => answerSquareClicked(i, j));
     }
   }
@@ -1884,6 +1877,9 @@ async function roundOne() {
       textDisplayBtn.id = "riskBtn"; //todo maybe change this later to remove the id change
       document.getElementById("riskBtn").addEventListener("click", () => {
         // closeTextDisplayWindow();
+        // console.log(sessionStorage.name)
+        ws.send(JSON.stringify({'activePlayer': sessionStorage.name}))
+        displayPlayerTurnMessage(sessionStorage.name)
         console.log("guessing");
         activateButtons();
 
