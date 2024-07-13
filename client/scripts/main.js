@@ -302,8 +302,8 @@ let resultsHTML = "";
 let availableGames;
 
 // -------------------------------------------------- Global Arrays ------------------------------------------------------------
-let roundOneArray = []; //this gets used by the game and defaults to placeholder questions
-let roundTwoArray = [];
+// let roundOneArray = []; //this gets used by the game and defaults to placeholder questions
+// let roundTwoArray = [];
 let finalJeopardyCategory = [];
 let classList = [];
 let results = [];
@@ -324,18 +324,18 @@ let customGameName = "";
 const addedCategoriesDefaultHTML = `\n <h1>Gameplay Categories:</h1><ol id="tempCategories"></ol>\n`;
 
 // ----------------------------------- Fill Round One, Two, and final Arrays ---------------------------------------------
-for (let m = 0; roundTwoArray.length < 36; m++) {
-  for (let questionPosition = m; questionPosition < 60; questionPosition++) {
-    for (let catIndex = 0; catIndex < 6; catIndex++) {
-      if (roundTwoArray.length < 36) {
-        roundOneArray.push(placeholderQuestions[questionPosition]);
-        questionPosition += 5;
-        roundTwoArray.push(placeholderQuestions[questionPosition]);
-        questionPosition += 5;
-      }
-    }
-  }
-}
+// for (let m = 0; roundTwoArray.length < 36; m++) {
+//   for (let questionPosition = m; questionPosition < 60; questionPosition++) {
+//     for (let catIndex = 0; catIndex < 6; catIndex++) {
+//       if (roundTwoArray.length < 36) {
+//         roundOneArray.push(placeholderQuestions[questionPosition]);
+//         questionPosition += 5;
+//         roundTwoArray.push(placeholderQuestions[questionPosition]);
+//         questionPosition += 5;
+//       }
+//     }
+//   }
+// }
 
 finalJeopardyCategory.push(placeholderQuestions[60]);
 
@@ -1263,12 +1263,6 @@ function activateButtons() {
   passBtn.style.display = "inline-block";
 }
 
-// Enable the next round button/disable the placeholder nextround button
-function enableNextRound() {
-  nextRound.style.display = "inline-block";
-  placeholderNextRound.style.display = "none";
-}
-
 function fillPlayerList() {
   // console.log("players", sessionStorage.playerList);
   const playerList = JSON.parse(sessionStorage.playerList);
@@ -1306,9 +1300,13 @@ function activePlayerGuessing(activePlayer) {
   playerTurn.innerText = `${activePlayer} is answering...`;
 }
 
+function wsClearPlayerTurnInnerText () {
+  playerTurn.innerText = null;
+}
+
 // Notify that it is player 1's turn to choose
 function displayPlayerTimerMessage(activePlayer, numberOfSeconds) {
-  document.querySelector(".r1").style.backgroundColor = "rgb(39, 84, 84)"
+  document.querySelector(".r1").style.backgroundColor = "rgb(39, 84, 84)";
   playerTurn.innerText = `${activePlayer}, you have ${numberOfSeconds} seconds to answer.`;
 
   if (numberOfSeconds >= 0) {
@@ -1323,40 +1321,24 @@ function displayPlayerTimerMessage(activePlayer, numberOfSeconds) {
   //todo -- this could just come as a blanket reenabling of answer boxes once the correct answer has been entered, or once the timeout has been reached to answer at all
   if (numberOfSeconds < 0) {
     playerTurn.innerText = `I'm sorry, ${activePlayer}, you ran out of time to answer.`;
-    document.querySelector(".r1").style.backgroundColor = "rgb(59, 127, 127)"
+    document.querySelector(".r1").style.backgroundColor = "rgb(59, 127, 127)";
+    setTimeout(() => {
+      playerTurn.innerText = null
+      const ws = new WebSocket("ws://127.0.0.1:3300")
+      ws.addEventListener("open", () => {
+        ws.send(JSON.stringify({wsClearPlayerTurnInnerText: "wsClearPlayerTurnInnerText"}))
+        ws.close()
+      })
+      // textDisplay.style.display = "none";
+      closeTextDisplayWindow();
+      deactivateButtons();
+      hideTextDisplayBtn();
+    }, 2000);
+        //todo -- update the player's score to remove the points
+    //todo -- change the textDispCont back to select a category
+    //todo -- ws send both
   }
-}
-
-// Switch Players
-// function switchPlayer() {
-//   // if (passed === true) {
-//   //   // passed = false;
-//   // } else if (activePlayer == playerOnesName) {
-//   //   activePlayer = playerTwosName;
-//   //   activePlayerScore = player2Score;
-//   //   console.log("Player's turn:", activePlayer);
-//   //   win = null;
-//   // } else if (activePlayer == playerTwosName) {
-//   //   activePlayer = playerOnesName;
-//   //   activePlayerScore = player1Score;
-//   //   console.log("Player's turn:", activePlayer);
-//   //   win = null;
-//   // }
-//   displayPlayerTurnMessage();
-// }
-
-function setActivePlayerScore(pointsAvailable) {
-  // if (activePlayer === playerOnesName) {
-  //   console.log("pointsAvailable:", pointsAvailable);
-  //   console.log("activePlayerScore:", activePlayerScore);
-  //   console.log("round1ArrayScore", roundOneArray[index].score);
-  //   player1Score = activePlayerScore += pointsAvailable;
-  // } else if (activePlayer === playerTwosName) {
-  //   player2Score = activePlayerScore += pointsAvailable;
-  //   console.log("pointsAvailable:", pointsAvailable);
-  //   console.log("activePlayerScore:", activePlayerScore);
-  //   console.log("round1ArrayScore", roundOneArray[index].score);
-  // }
+  // ws.send()
 }
 
 textDisplayBtn?.addEventListener("click", function () {
@@ -1386,40 +1368,22 @@ function wsCloseTextDisplayWindow() {
   });
 }
 
-function declareQuestionWinOrLose() {
-  if (win === false) {
-    console.log("answered incorrectly");
-    // passed = false;
-    // win = undefined;
-    // console.log("playerOnesName:", playerOnesName);
-    // console.log("playerTwosName", playerTwosName);
-
-    // if (activePlayer == playerOnesName) {
-    //   activePlayer = playerTwosName;
-    // } else {
-    //   activePlayer = playerOnesName;
-    // }
-    // displayPlayerTurnMessage();
-    // console.log("activePlayer", activePlayer);
-  }
-  if (win === true) {
-    console.log("answered correctly");
-  }
-}
 //!----------------------------------------- Correct / Incorrect Functions -----------------------------------------
 
-const correct = (gameQuestions, gameAnswers, row, column) => {
+const correct = () => {
   playerGuess = "";
   textDispCont.textContent = `Congratulations ${activePlayer}, you answered correctly!`;
   textDisplayBtn.style.display = "inline-block";
-  let pointsAvailable;
-  if (round === "round1") {
-    pointsAvailable = scoreObject.row;
-  }
-  if (round === "final") {
-    console.log("implement this later");
-  }
-  setActivePlayerScore(pointsAvailable);
+  // let pointsAvailable;
+  // if (round === "round1") {
+    
+  //   const playerUpdateObject = {"email": email, "score": newScore}
+  //   ws.send(JSON.stringify({playerUpdateObject: playerUpdateObject}))
+  // }
+  // if (round === "final") {
+  //   console.log("implement this later");
+  // }
+  // setActivePlayerScore(pointsAvailable);
   p1Score.textContent = player1Score;
   p2Score.textContent = player2Score;
   guessBtn.removeEventListener("click", submitGuess);
@@ -1428,19 +1392,19 @@ const correct = (gameQuestions, gameAnswers, row, column) => {
 
 const incorrect = (gameQuestions, gameAnswers, row, column) => {
   playerGuess = "";
-  let pointsAvailable;
+  // let pointsAvailable;
   if (round === "round1") {
     // console.log("wrong!");
-    pointsAvailable = scoreObject.row * -1;
+    // JSON.parse(sessionStorage.score) += scoreObject.row;
   }
   if (round === "final") {
     console.log("implement this later");
   }
   if (passed == false || passed == undefined) {
     // activePlayerScore = 0;
-    setActivePlayerScore(pointsAvailable);
+    // setActivePlayerScore(pointsAvailable);
     // switchPlayer();
-    console.log("activePlayerScore:", activePlayerScore);
+    // console.log("activePlayerScore:", activePlayerScore);
     passed = true;
     textDispCont.textContent = `Wrong answer. ${activePlayer}, would you like to play?`;
     // p1Score.textContent = player1Score;
@@ -1461,13 +1425,14 @@ const incorrect = (gameQuestions, gameAnswers, row, column) => {
     // }, 2000);
   } else {
     // activePlayerScore = 0;
-    setActivePlayerScore(pointsAvailable);
+    // setActivePlayerScore(pointsAvailable);
     textDispCont.textContent = `I'm sorry, ${activePlayer} that's the wrong answer.`;
-    // p1Score.textContent = player1Score;
-    // p2Score.textContent = player2Score;
+
+
+
     // switchPlayer();
     setTimeout(() => {
-      // textDisplay.style.display = "none";
+      textDisplay.style.display = "none";
       closeTextDisplayWindow();
       deactivateButtons();
       hideTextDisplayBtn();
@@ -1476,34 +1441,47 @@ const incorrect = (gameQuestions, gameAnswers, row, column) => {
 };
 
 function submitGuess(gameQuestions, gameAnswers, row, column) {
-  // Set the playerGuess Variable
-  console.log("hello?");
+  console.log("gameQuestions:", gameQuestions, "gameAnswers:", gameAnswers, "row:",row, "column",column)
+  //todo -- check on this removeeventlistener, score changes repeating
+  
+  guessBtn.removeEventListener("click", () => {
+    submitGuess(gameQuestions, gameAnswers, row, column);
+  })
+}
+function SubmitGuess(gameQuestions, gameAnswers, row, column) {
   playerGuess = inputFieldForAnswer.value;
 
-  // Clear the input field
   inputFieldForAnswer.value = "";
 
   // Check the Round
   if (round === "round1") {
     const ws = new WebSocket("ws://127.0.0.1:3300");
     ws.addEventListener("open", () => {
-      // ws.close();
       const answerObject = {
         gameQuestions: gameQuestions,
         gameAnswers: gameAnswers,
         row: row,
         column: column,
+        email: JSON.parse(sessionStorage.email),
       };
       if (
         gameAnswers[column][row].toLowerCase() === playerGuess.toLowerCase()
       ) {
+        // console.log("here:", gameAnswers[column][row].toLowerCase(),playerGuess.toLowerCase())
+        sessionStorage.score = JSON.parse(+sessionStorage.score) + scoreObject[row];
+        answerObject.score = sessionStorage.score;
         ws.send(JSON.stringify({ "answered correctly": answerObject }));
         win = true;
-        correct(gameQuestions, gameAnswers, row, column);
-      } else {
-        const answerObject = {
-          wrongAnswerInformation: answerObject,
-        };
+        correct();
+      } else if (
+        gameAnswers[column][row].toLowerCase() !== playerGuess.toLowerCase()
+      ) {
+        // console.log("complete gameanswers",gameAnswers)
+        console.log("here:", gameAnswers[column][row].toLowerCase(),playerGuess.toLowerCase())
+        console.log("sessionstorage.score",sessionStorage.score)
+        console.log("scoreobject.row",scoreObject[row])
+        sessionStorage.score = JSON.parse(+sessionStorage.score) - scoreObject[row];
+        answerObject.score = sessionStorage.score;
         ws.send(JSON.stringify({ wrongAnswerInformation: answerObject }));
         win = false;
         incorrect(gameQuestions, gameAnswers, row, column);
@@ -1564,29 +1542,31 @@ async function roundOne() {
         return;
       }
 
+      if (JSON.parse(message.data)["wsClearPlayerTurnInnerText"]) {
+        wsClearPlayerTurnInnerText()
+      }
       if (JSON.parse(message.data)["activePlayer"]) {
         activePlayerGuessing(JSON.parse(message.data).activePlayer);
+
+        //todo -- add something to alert others when activePlayer is no longer guessing
         // displayPlayerTurnMessage(JSON.parse(message.data).activePlayer)
       }
 
       if (JSON.parse(message.data)["wrongAnswerInformation"]) {
-        // console.log("wrongobject:", message.data);
         const { gameQuestions, gameAnswers, row, column } = JSON.parse(
           message.data
         )["wrongAnswerInformation"];
         win = false;
-        incorrect(gameQuestions, gameAnswers, row, column);
+        // incorrect();
         return;
       }
 
-      // console.log('message.data:',message.data)
       if (JSON.parse(message.data).activeQuestion) {
         textDispCont.textContent = JSON.parse(message.data).activeQuestion[0];
       }
 
       //! Gameplay - clicking on an answer square (received by the students only)
       if (JSON.parse(message.data).coordinates) {
-        // console.log("message.data:", message.data);
         for (let i = 0; i < JSON.parse(message.data).coordinates.length; i++) {
           const { row, column } = JSON.parse(message.data).coordinates[i];
           handleAnswerSquareClicked(row, column);
@@ -1610,116 +1590,9 @@ async function roundOne() {
           ws.send(JSON.stringify({ coordinates: coordinates }));
         }
       }
-
-      if (message.data[0] === "{") {
-        message = JSON.parse(message.data);
-        const {
-          answer,
-          question,
-          category,
-          className,
-          gameStarted,
-          gameName,
-          playerList,
-          playerSignupObject,
-        } = message;
-      }
-
-      // pullGameInformationFromSessionStorage(
-      //   answer,
-      //   question,
-      //   category,
-      //   className,
-      //   gameName,
-      //   players,
-      //   playerSignupObject,
-      //   gameStarted
-      // );
-
-      // }
-      function pullGameInformationFromSessionStorage() {
-        classNameText.textContent = className;
-        gameNameText.textContent = gameName;
-
-        const gameplayAnswers = [];
-        const gameplayQuestions = [];
-        const gameplayCategories = [];
-
-        for (let index = 0; index < 6; index += 6) {
-          let answerArray = Object.entries(answer);
-          let questionArray = Object.entries(question);
-          for (const item of answerArray) {
-            gameplayAnswers.push(item[1].split("\r\n"));
-          }
-          for (const item of questionArray) {
-            gameplayQuestions.push(item[1].split("\r\n"));
-          }
-        }
-
-        for (let index = 0; index < Object.values(category).length; index++) {
-          for (let i = 0; i < 6; i += 6) {
-            gameplayCategories.push(category[`category_${index}`]);
-          }
-        }
-        const tempAnswersArray = [];
-        const tempQuestionsArray = [];
-
-        for (let i = 0; i < gameplayAnswers.length; i++) {
-          for (let item = 0; item < gameplayAnswers[i].length; item++) {
-            tempAnswersArray.push(gameplayAnswers[i][item]);
-            tempQuestionsArray.push(gameplayQuestions[i][item]);
-          }
-        }
-
-        for (let position = 0; position < 6; position++) {
-          for (let i = 0; i < 6; i++) {
-            roundOneArray[position].question = question[`question_${position}`];
-            roundOneArray[position].answer = answer[`answer_${position}`];
-            roundOneArray[position].category = category[`category_${position}`];
-          }
-
-          for (let i = 0; i < 36; i++) {
-            if (!roundOneArray[i]) {
-              roundOneArray.push([]);
-            }
-            if (gameplayCategories[i]) {
-              roundOneArray[i].category = gameplayCategories[i];
-            }
-            if (tempQuestionsArray[i]) {
-              roundOneArray[i].question = tempQuestionsArray[i];
-            }
-            if (tempAnswersArray[i]) {
-              roundOneArray[i].answer = tempAnswersArray[i];
-            }
-          }
-        }
-      }
-
-      const tempRoundOneArray = [];
-      for (let i = 0; i < 6; i++) {
-        for (let j = 0; j < roundOneArray.length; j += 6) {
-          tempRoundOneArray.push(roundOneArray[i + j]);
-        }
-      }
-
-      // Set the score values
-      let j = 0;
-      for (let i = 0; i < tempRoundOneArray.length; i++) {
-        if (i % 6 === 0 && i != 0) {
-          j += 200;
-        }
-        tempRoundOneArray[i].score = 200 + j;
-      }
-
-      //! Change this to the WS object
-      roundOneArray = tempRoundOneArray; // This currently contains the placeholder information
-      // console.log("roundOneArray:", roundOneArray);
-
-      //!------------------------------------- Fill in the Answer board --------------------------------------
-
-      // displayPlayerTurnMessage();
     });
   }
+
 
   // First Row
   for (let i = 0; i < 6; i++) {
@@ -1782,20 +1655,11 @@ async function roundOne() {
   answerBoxes.answer_3 = document.getElementsByClassName("answer_3");
   answerBoxes.answer_4 = document.getElementsByClassName("answer_4");
 
-  function answerSquareClicked(row, column) {
-    const clickedSpot = { row: row, column: column };
-    ws.send(JSON.stringify(clickedSpot));
-    if (ws) {
-      handleAnswerSquareClicked(row, column);
-    }
-  }
   function handleAnswerSquareClicked(row, column) {
-    // console.log("row:",row,"column:",column)
     let box = answerBoxes[`answer_${row}`][column];
     if (box.textContent === "") {
       return;
     }
-    // console.log(row, column)
     passed = false;
 
     activateButtons();
@@ -1804,7 +1668,6 @@ async function roundOne() {
       sessionStorage.position += `${row}${column}`;
       ws.send(JSON.stringify({ position: `${sessionStorage.position}` }));
     } else if (row != undefined && column != undefined) {
-      // console.log(row, column);
       ws.send(JSON.stringify({ position: `${row}${column}` }));
     }
 
@@ -1821,21 +1684,15 @@ async function roundOne() {
     //todo -- finish this
     //todo -- investigate why this does not correctly parse Second Game
     const questions = JSON.parse(sessionStorage.question);
-    // console.log("questions_split:", questions[`question_0`].split("\r\n"));
     const answers = JSON.parse(sessionStorage.answer);
-    // console.log("answers:", answers);
+
     let gameQuestions = {};
     let gameAnswers = {};
 
     for (let i = 0; i < 6; i++) {
-      // console.log("i:",i)
-      // console.log(gameQuestions)
       gameQuestions[i] = questions[`question_${i}`].split("\r\n");
       gameAnswers[i] = answers[`answer_${i}`].split("\r\n");
     }
-
-    // console.log(gameQuestions);
-    // console.log(gameAnswers);
 
     openTextDisplayWindow(gameQuestions, gameAnswers, row, column);
 
@@ -1858,10 +1715,8 @@ async function roundOne() {
 
   for (let i = 0; i < 5; i++) {
     for (let j = 0; j < 6; j++) {
-      // console.log("i:",i,"j:",j)
       let temp = answerBoxes[`answer_${i}`][j];
-      // temp.addEventListener("click", () => console.log(i, j));
-      temp.addEventListener("click", () => answerSquareClicked(i, j));
+      temp.addEventListener("click", () => handleAnswerSquareClicked(i, j));
     }
   }
 
@@ -1883,7 +1738,6 @@ async function roundOne() {
       textDisplayBtn.id = "riskBtn"; //todo maybe change this later to remove the id change
       document.getElementById("riskBtn").addEventListener("click", () => {
         // closeTextDisplayWindow();
-        // console.log(sessionStorage.name)
         ws.send(JSON.stringify({ activePlayer: sessionStorage.name }));
         let numberOfSeconds = 3;
         displayPlayerTimerMessage(sessionStorage.name, numberOfSeconds);
