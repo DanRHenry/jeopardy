@@ -16,14 +16,14 @@ if (document.title === "Jeopardy") {
 
 // Gameplay API
 const serverPort = 3300;
-const apiServer = `http://127.0.0.1:${serverPort}/api/jeopardy`;
-// const apiServer = "https://danhenrydev.com/api/jeopardy";
+// const apiServer = `http://127.0.0.1:${serverPort}/api/jeopardy`;
+const apiServer = "https://danhenrydev.com/api/jeopardy";
 
 // Title Page
 let PREFIX = "http://127.0.0.1:";
 // PREFIX = apiServer;
-const PORT = 8080;
-// const PORT = 5500;
+// const PORT = 8080;
+const PORT = 5501;
 const EDITPATH = "/edit-content.html";
 const ROUND1PATH = "/round-1.html";
 
@@ -1440,69 +1440,64 @@ const incorrect = (gameQuestions, gameAnswers, row, column) => {
   }
 };
 
-function submitGuess(gameQuestions, gameAnswers, row, column) {
-  console.log("gameQuestions:", gameQuestions, "gameAnswers:", gameAnswers, "row:",row, "column",column)
-  //todo -- check on this removeeventlistener, score changes repeating
-  
-  guessBtn.removeEventListener("click", () => {
-    submitGuess(gameQuestions, gameAnswers, row, column);
-  })
-}
-function SubmitGuess(gameQuestions, gameAnswers, row, column) {
-  playerGuess = inputFieldForAnswer.value;
 
-  inputFieldForAnswer.value = "";
+// function SubmitGuess(gameQuestions, gameAnswers, row, column) {
+//   playerGuess = inputFieldForAnswer.value;
 
-  // Check the Round
-  if (round === "round1") {
-    const ws = new WebSocket("ws://127.0.0.1:3300");
-    ws.addEventListener("open", () => {
-      const answerObject = {
-        gameQuestions: gameQuestions,
-        gameAnswers: gameAnswers,
-        row: row,
-        column: column,
-        email: JSON.parse(sessionStorage.email),
-      };
-      if (
-        gameAnswers[column][row].toLowerCase() === playerGuess.toLowerCase()
-      ) {
-        // console.log("here:", gameAnswers[column][row].toLowerCase(),playerGuess.toLowerCase())
-        sessionStorage.score = JSON.parse(+sessionStorage.score) + scoreObject[row];
-        answerObject.score = sessionStorage.score;
-        ws.send(JSON.stringify({ "answered correctly": answerObject }));
-        win = true;
-        correct();
-      } else if (
-        gameAnswers[column][row].toLowerCase() !== playerGuess.toLowerCase()
-      ) {
-        // console.log("complete gameanswers",gameAnswers)
-        console.log("here:", gameAnswers[column][row].toLowerCase(),playerGuess.toLowerCase())
-        console.log("sessionstorage.score",sessionStorage.score)
-        console.log("scoreobject.row",scoreObject[row])
-        sessionStorage.score = JSON.parse(+sessionStorage.score) - scoreObject[row];
-        answerObject.score = sessionStorage.score;
-        ws.send(JSON.stringify({ wrongAnswerInformation: answerObject }));
-        win = false;
-        incorrect(gameQuestions, gameAnswers, row, column);
-      }
-    });
-  }
+//   inputFieldForAnswer.value = "";
 
-  if (round === "final") {
-    if (
-      finalJeopardyCategory[i].answer.toLowerCase() == playerGuess.toLowerCase()
-    ) {
-      win = true;
-      correct();
-    } else {
-      win = false;
-      incorrect();
-    }
-  }
-}
+//   // Check the Round
+//   if (round === "round1") {
+//     const ws = new WebSocket("ws://127.0.0.1:3300");
+//     ws.addEventListener("open", () => {
+//       const answerObject = {
+//         gameQuestions: gameQuestions,
+//         gameAnswers: gameAnswers,
+//         row: row,
+//         column: column,
+//         email: JSON.parse(sessionStorage.email),
+//       };
+//       if (
+//         gameAnswers[column][row].toLowerCase() === playerGuess.toLowerCase()
+//       ) {
+//         // console.log("here:", gameAnswers[column][row].toLowerCase(),playerGuess.toLowerCase())
+//         sessionStorage.score = JSON.parse(+sessionStorage.score) + scoreObject[row];
+//         answerObject.score = sessionStorage.score;
+//         ws.send(JSON.stringify({ "answered correctly": answerObject }));
+//         win = true;
+//         correct();
+//       } else if (
+//         gameAnswers[column][row].toLowerCase() !== playerGuess.toLowerCase()
+//       ) {
+//         // console.log("complete gameanswers",gameAnswers)
+//         console.log("here:", gameAnswers[column][row].toLowerCase(),playerGuess.toLowerCase())
+//         console.log("sessionstorage.score",sessionStorage.score)
+//         console.log("scoreobject.row",scoreObject[row])
+//         sessionStorage.score = JSON.parse(+sessionStorage.score) - scoreObject[row];
+//         answerObject.score = sessionStorage.score;
+//         ws.send(JSON.stringify({ wrongAnswerInformation: answerObject }));
+//         win = false;
+//         incorrect(gameQuestions, gameAnswers, row, column);
+//       }
+//     });
+//   }
+
+//   if (round === "final") {
+//     if (
+//       finalJeopardyCategory[i].answer.toLowerCase() == playerGuess.toLowerCase()
+//     ) {
+//       win = true;
+//       correct();
+//     } else {
+//       win = false;
+//       incorrect();
+//     }
+//   }
+// }
 
 //! Round One Function
+
+
 async function roundOne() {
   const ws = new WebSocket("ws://127.0.0.1:3300");
 
@@ -1708,9 +1703,20 @@ async function roundOne() {
       );
       textDispCont.textContent = gameQuestions[column][row];
     }
-    guessBtn.addEventListener("click", () => {
+    guessBtn.addEventListener("click", handleSubmitGuess);
+
+    function submitGuess(gameQuestions, gameAnswers, row, column) {
+      // console.log("gameQuestions:", gameQuestions, "gameAnswers:", gameAnswers, "row:",row, "column",column)
+      //todo -- check on this removeeventlistener, score changes repeating
+    
+      // guessBtn.removeEventListener("click", handleSubmitGuess);
+      // })
+    }
+
+    function handleSubmitGuess () {
       submitGuess(gameQuestions, gameAnswers, row, column);
-    });
+      guessBtn.removeEventListener("click", handleSubmitGuess)
+    }
   }
 
   for (let i = 0; i < 5; i++) {
