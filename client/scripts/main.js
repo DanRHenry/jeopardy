@@ -3,12 +3,12 @@ import placeholderQuestions from "./placeholder-questions.js";
 
 // Gameplay API
 const serverPort = 3300;
-const apiServer = `http://127.0.0.1:${serverPort}/api/jeopardy`;
-// const apiServer = "https://danhenrydev.com/api/jeopardy";
+//const apiServer = `http://127.0.0.1:${serverPort}/api/jeopardy`;
+const apiServer = "https://danhenrydev.com/api/jeopardy";
 
 // Title Page
-let PREFIX = "http://127.0.0.1:";
-// PREFIX = apiServer;
+// PREFIX = "http://127.0.0.1:";
+const PREFIX = apiServer;
 const PORT = 8080;
 // const PORT = 5500;
 const EDITPATH = "/edit-content.html";
